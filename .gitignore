@@ -1,0 +1,8 @@
+cat > .gitignore << 'EOF'
+target/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+application.properties
+EOF
