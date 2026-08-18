@@ -43,4 +43,23 @@ public class Usuario {
 
     public EstadoVerificacion getEstadoVerificacion() { return estadoVerificacion; }
     public void setEstadoVerificacion(EstadoVerificacion estadoVerificacion) { this.estadoVerificacion = estadoVerificacion; }
+   
+   
+    @Column(name = "numero_documento")
+    private String numeroDocumento;
+
+    @Column(name = "ruta_documento")
+    private String rutaDocumento;
+
+    @Column(name = "ruta_selfie")
+    private String rutaSelfie;
+
+    public String getNumeroDocumento() { return numeroDocumento; }
+public void setNumeroDocumento(String numeroDocumento) { this.numeroDocumento = numeroDocumento; }
+
+public String getRutaDocumento() { return rutaDocumento; }
+public void setRutaDocumento(String rutaDocumento) { this.rutaDocumento = rutaDocumento; }
+
+public String getRutaSelfie() { return rutaSelfie; }
+public void setRutaSelfie(String rutaSelfie) { this.rutaSelfie = rutaSelfie; }
 }
