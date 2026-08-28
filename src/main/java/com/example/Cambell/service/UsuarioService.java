@@ -42,10 +42,31 @@ public class UsuarioService {
     return usuarioRepository.findByRolAndEstadoVerificacion(rol, estado);
 }
 
-    public void cambiarEstadoVerificacion(Long id, EstadoVerificacion estado) {
-    Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-    usuario.setEstadoVerificacion(estado);
-    usuarioRepository.save(usuario);
-}
+    public Usuario cambiarEstadoVerificacion(Long id, EstadoVerificacion estado) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        usuario.setEstadoVerificacion(estado);
+        return usuarioRepository.save(usuario);
+    }
+
+    // Actualiza datos básicos del perfil (HU-U04)
+    public void actualizarPerfil(Long id, String nombre, String correo) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        usuario.setNombre(nombre);
+        usuario.setCorreo(correo);
+        usuarioRepository.save(usuario);
+    }
+
+    // Cambia la contraseña verificando que la actual sea correcta (parte de HU-U04)
+    public boolean cambiarPassword(Long id, String passwordActual, String nuevaPassword) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (!passwordEncoder.matches(passwordActual, usuario.getPassword())) {
+            return false;
+        }
+        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+        usuarioRepository.save(usuario);
+        return true;
+    }
 }

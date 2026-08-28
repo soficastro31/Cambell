@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pagar servicio - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .resumen { background:#1e1e1e; padding:20px; border-radius:8px; margin-bottom:20px; }
+        .fila { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #2a2a2a; }
+        .desc { color:#999; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/solicitudes/mis-solicitudes}" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/pagos/historial}" class="btn-nav">Historial</a>
+            <a th:href="@{/pagos/metodos}" class="btn-nav">Mis métodos</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 640px; margin: 0 auto;">
+        <h2>Pagar servicio</h2>
+
+        <div th:if="${pagoOk}" style="background:#1e331e; color:#9ae6b4; padding:12px; border-radius:8px; margin-bottom:15px;">
+            ✅ Pago realizado con éxito. El trabajador recibirá el neto.
+        </div>
+        <div th:if="${errorPago}" style="background:#3a1e1e; color:#feb2b2; padding:12px; border-radius:8px; margin-bottom:15px;">
+            <span th:text="${errorPago}"></span>
+        </div>
+
+        <div class="resumen">
+            <p style="margin:0; font-weight:600;" th:text="${solicitud.descripcion}"></p>
+            <p style="margin:4px 0 0; color:#999;">Trabajador: <span th:text="${solicitud.trabajador != null ? solicitud.trabajador.nombre : '-'}"></span></p>
+
+            <div style="margin-top:15px;">
+                <div class="fila"><span class="desc">Monto total del servicio</span><span th:text="'$ ' + ${solicitud.precioOfertado}"></span></div>
+                <div class="fila" th:if="${pago != null}"><span class="desc">Comisión Cambell (3%)</span><span th:text="'$ ' + ${pago.comision}"></span></div>
+                <div class="fila" th:if="${pago != null}"><span class="desc">Neto para el trabajador</span><span th:text="'$ ' + ${pago.netoTrabajador}"></span></div>
+                <div class="fila" th:if="${pago == null}"><span class="desc">Comisión Cambell (3%)</span><span>se calcula al pagar</span></div>
+            </div>
+        </div>
+
+        <!-- Ya pagado: resumen -->
+        <div th:if="${pago != null and pago.estado.name() == 'COMPLETADO'}" style="background:#1e331e; padding:20px; border-radius:8px; margin-bottom:20px;">
+            <p style="margin:0; color:#9ae6b4;">Pago COMPLETADO</p>
+            <p style="margin:6px 0 0; color:#ccc;">Método: <span th:text="${pago.metodoPago != null ? pago.metodoPago.numeroEnmascarado : '-'}"></span></p>
+            <p style="margin:6px 0 0; color:#ccc;">Fecha: <span th:text="${pago.fechaPago != null ? #temporals.format(pago.fechaPago, 'dd/MM/yyyy HH:mm') : '-'}"></span></p>
+            <a th:href="@{/pagos/comprobante/{id}(id=${pago.id})}" class="btn-hero-principal" style="width:auto; display:inline-block; margin-top:15px;">Ver comprobante</a>
+        </div>
+
+        <!-- Fallido: permitir reintentar -->
+        <div th:if="${pago != null and pago.estado.name() == 'FALLIDO'}" style="background:#3a1e1e; padding:20px; border-radius:8px; margin-bottom:20px;">
+            <p style="margin:0; color:#feb2b2;">El pago falló. Revisa tu método de pago e inténtalo de nuevo.</p>
+        </div>
+
+        <!-- Sin pago registrado o fallido: mostrar botón de pago -->
+        <form th:if="${pago == null or pago.estado.name() == 'FALLIDO'}" th:action="@{/pagos/solicitud/{id}/realizar(id=${solicitud.id})}" method="post" style="background:#1e1e1e; padding:20px; border-radius:8px;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <label>Método de pago</label>
+            <select name="metodoId" required style="width:100%; background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333; margin-bottom:15px;">
+                <option th:each="m : ${metodos}" th:value="${m.id}" th:text="${m.tipo + ' · ' + m.numeroEnmascarado + ' (' + m.titular + ')'}"></option>
+            </select>
+            <p th:if="${#lists.isEmpty(metodos)}" style="color:#999; font-size:13px;">
+                No tienes métodos de pago registrados.
+                <a th:href="@{/pagos/metodos}" style="color:#FF6B00;">Registrar uno</a>
+            </p>
+            <button type="submit" class="btn-hero-principal" style="width:auto; display:inline-block;">
+                Pagar $ <span th:text="${solicitud.precioOfertado}"></span>
+            </button>
+        </form>
+    </section>
+
+</body>
+</html>

@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <title>Registro - Cambell</title>
     <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .paso { display: none; }
+        .paso.activo { display: block; }
+        .error-campo { color: #ff4d4d; font-size: 12px; margin-top: 4px; display: block; }
+        .indicador-pasos { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .punto-paso { width: 10px; height: 10px; border-radius: 50%; background: #444; }
+        .punto-paso.activo { background: var(--naranja); }
+        .btn-paso { width: 48%; display: inline-block; }
+    </style>
 </head>
 <body>
 
@@ -15,56 +24,118 @@
     </nav>
 
     <section class="auth-container">
-        <div class="auth-card">
+        <div class="auth-card" style="max-width:480px;">
             <h2>Crear cuenta en Cambell</h2>
-            <form th:action="@{/registro}" th:object="${usuario}" method="post" enctype="multipart/form-data">
+
+            <div class="indicador-pasos">
+                <div class="punto-paso activo" id="punto1"></div>
+                <div class="punto-paso" id="punto2"></div>
+            </div>
+
+            <form th:action="@{/registro}" th:object="${usuario}" method="post" enctype="multipart/form-data" id="formRegistro">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-                <label>Nombre</label>
-                <input type="text" th:field="*{nombre}" required/>
+                <!-- PASO 1: Datos básicos -->
+                <div class="paso activo" id="paso1">
+                    <label>Nombre completo</label>
+                    <input type="text" th:field="*{nombre}" required minlength="3" pattern="[A-Za-zÀ-ÿ\s]+" title="El nombre solo debe contener letras"/>
+                    <span class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></span>
 
-                <label>Correo</label>
-                <input type="email" th:field="*{correo}" required/>
+                    <label>Correo</label>
+                    <input type="email" th:field="*{correo}" required/>
+                    <span class="error-campo" th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}"></span>
 
-                <label>Contraseña</label>
-                <input type="password" th:field="*{password}" required/>
+                    <label>Contraseña</label>
+                    <input type="password" th:field="*{password}" required minlength="8"
+                           pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*"
+                           title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número"/>
+                    <span class="error-campo" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                    <small style="color:#999; font-size:11px;">Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.</small>
 
-                <label>Rol</label>
-                <select th:field="*{rol}" id="rolSelect" onchange="mostrarCamposTrabajador()">
-                    <option value="CLIENTE">Cliente</option>
-                    <option value="TRABAJADOR">Trabajador</option>
-                </select>
+                    <label>Rol</label>
+                    <select th:field="*{rol}" id="rolSelect" required>
+                        <option value="">Selecciona un rol</option>
+                        <option value="CLIENTE">Cliente</option>
+                        <option value="TRABAJADOR">Trabajador</option>
+                    </select>
+                    <span class="error-campo" th:if="${#fields.hasErrors('rol')}" th:errors="*{rol}"></span>
 
-                <div id="camposTrabajador" style="display:none;">
-                    <p style="margin-top:20px; color:#FF6B00; font-weight:700; font-size:13px;">
-                        VERIFICACIÓN DE IDENTIDAD REQUERIDA
+                    <button type="button" class="btn-hero-principal" style="margin-top:25px;" onclick="siguientePaso()">Siguiente</button>
+                </div>
+
+                <!-- PASO 2: Verificación (solo trabajador) -->
+                <div class="paso" id="paso2">
+                    <p style="color:#FF6B00; font-weight:700; font-size:13px; margin-bottom:15px;">
+                        VERIFICACIÓN DE IDENTIDAD
                     </p>
 
                     <label>Número de documento</label>
-                    <input type="text" th:field="*{numeroDocumento}" placeholder="Cédula de ciudadanía"/>
+                    <input type="text" th:field="*{numeroDocumento}" id="numeroDocumento"
+                           pattern="[0-9]{6,15}" title="Solo números, entre 6 y 15 dígitos"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
+                    <span class="error-campo" th:if="${#fields.hasErrors('numeroDocumento')}" th:errors="*{numeroDocumento}"></span>
 
                     <label>Foto del documento (frente)</label>
-                    <input type="file" name="documentoFile" accept="image/*"/>
+                    <input type="file" name="documentoFile" id="documentoFile" accept="image/*"/>
+                    <span class="error-campo" th:if="${errorDocumento}" th:text="${errorDocumento}"></span>
 
                     <label>Selfie de verificación</label>
-                    <input type="file" name="selfieFile" accept="image/*"/>
+                    <input type="file" name="selfieFile" id="selfieFile" accept="image/*"/>
+                    <span class="error-campo" th:if="${errorSelfie}" th:text="${errorSelfie}"></span>
 
                     <p style="font-size:12px; color:#999; margin-top:10px;">
-                        Tu cuenta quedará en revisión hasta que un administrador confirme tu identidad.
+                        Tu cuenta quedará en revisión hasta confirmar tu identidad.
                     </p>
+
+                    <div style="display:flex; justify-content:space-between; margin-top:25px;">
+                        <button type="button" class="btn-hero-secundario btn-paso" onclick="pasoAnterior()">Atrás</button>
+                        <button type="submit" class="btn-hero-principal btn-paso">Registrarme</button>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn-hero-principal">Registrarme</button>
+                <!-- Solo se muestra si es CLIENTE (no necesita paso 2) -->
+                <div id="botonFinalCliente" style="display:none; margin-top:25px;">
+                    <button type="submit" class="btn-hero-principal">Registrarme</button>
+                </div>
             </form>
             <p class="auth-link">¿Ya tienes cuenta? <a th:href="@{/login}">Inicia sesión aquí</a></p>
         </div>
     </section>
 
     <script>
-        function mostrarCamposTrabajador() {
+        function siguientePaso() {
+            const form = document.getElementById('formRegistro');
+            const camposPaso1 = document.querySelectorAll('#paso1 input, #paso1 select');
+            for (const campo of camposPaso1) {
+                if (!campo.checkValidity()) {
+                    campo.reportValidity();
+                    return;
+                }
+            }
+
             const rol = document.getElementById('rolSelect').value;
-            const campos = document.getElementById('camposTrabajador');
-            campos.style.display = (rol === 'TRABAJADOR') ? 'block' : 'none';
+
+            if (rol === 'CLIENTE') {
+                // El cliente no necesita el paso 2, mostramos botón directo
+                document.getElementById('paso1').classList.remove('activo');
+                document.getElementById('botonFinalCliente').style.display = 'block';
+                document.getElementById('numeroDocumento').removeAttribute('required');
+            } else {
+                document.getElementById('paso1').classList.remove('activo');
+                document.getElementById('paso2').classList.add('activo');
+                document.getElementById('punto1').classList.remove('activo');
+                document.getElementById('punto2').classList.add('activo');
+                document.getElementById('numeroDocumento').setAttribute('required', 'true');
+                document.getElementById('documentoFile').setAttribute('required', 'true');
+                document.getElementById('selfieFile').setAttribute('required', 'true');
+            }
+        }
+
+        function pasoAnterior() {
+            document.getElementById('paso2').classList.remove('activo');
+            document.getElementById('paso1').classList.add('activo');
+            document.getElementById('punto2').classList.remove('activo');
+            document.getElementById('punto1').classList.add('activo');
         }
     </script>
 

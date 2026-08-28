@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Métodos de pago - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/solicitudes/mis-solicitudes}" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/pagos/historial}" class="btn-nav">Historial de pagos</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 760px; margin: 0 auto;">
+        <h2>Mis métodos de pago</h2>
+
+        <div th:if="${ok}" style="background:#1e331e; color:#9ae6b4; padding:12px; border-radius:8px; margin-bottom:15px;">
+            <span th:text="${ok}"></span>
+        </div>
+        <div th:if="${error}" style="background:#3a1e1e; color:#feb2b2; padding:12px; border-radius:8px; margin-bottom:15px;">
+            <span th:text="${error}"></span>
+        </div>
+
+        <div th:each="m : ${metodos}" style="background:#1e1e1e; padding:16px 20px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <p style="margin:0; font-weight:600;" th:text="${m.titular}"></p>
+                <p style="margin:4px 0 0; color:#999;">
+                    <span th:text="${m.tipo}"></span> · <span th:text="${m.numeroEnmascarado}"></span>
+                </p>
+            </div>
+            <span style="color:#66bb6a; font-size:12px;">Registrado</span>
+        </div>
+
+        <div style="background:#1e1e1e; padding:20px; border-radius:8px; margin-top:20px;">
+            <h3 style="margin-top:0;">Agregar método de pago</h3>
+            <form th:action="@{/pagos/metodos}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <label>Tipo</label>
+                <select name="tipo" required style="width:100%; background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333; margin-bottom:10px;">
+                    <option th:each="t : ${tipos}" th:value="${t.name()}" th:text="${t.name()}"></option>
+                </select>
+                <label>Titular</label>
+                <input type="text" name="titular" required placeholder="Nombre del titular"
+                       style="width:100%; background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333; margin-bottom:10px;"/>
+                <label>Número (solo se guarda enmascarado)</label>
+                <input type="text" name="numero" required placeholder="#### #### #### ####" maxlength="19"
+                       style="width:100%; background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333; margin-bottom:15px;"/>
+                <button type="submit" class="btn-hero-principal" style="width:auto; display:inline-block;">Guardar método de pago</button>
+            </form>
+        </div>
+    </section>
+
+</body>
+</html>

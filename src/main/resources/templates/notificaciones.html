@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Notificaciones - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="javascript:history.back()" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/notificaciones}" class="btn-nav" style="pointer-events:none; opacity:.6;">Notificaciones</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 720px; margin: 0 auto;">
+        <h2>Notificaciones</h2>
+
+        <div th:each="n : ${notificaciones}" style="background:#1e1e1e; padding:16px 20px; border-radius:8px; margin-bottom:10px;
+             border-left:4px solid;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <span th:switch="${n.tipo}" style="font-size:12px; font-weight:700; text-transform:uppercase;"
+                          th:styleappend="${n.tipo == 'ESTADO'} ? 'color:#FF6B00;' : (${n.tipo == 'ASIGNACION'} ? 'color:#66bb6a;' : 'color:#4aa3ff;')">
+                        <span th:case="'ASIGNACION'">Solicitud compatible</span>
+                        <span th:case="'VERIFICACION'">Verificación</span>
+                        <span th:case="'ESTADO'">Estado del servicio</span>
+                        <span th:case="*" th:text="${n.tipo}"></span>
+                    </span>
+                    <p style="margin:6px 0 0; color:#ddd;">
+                        <a th:if="${n.solicitud != null}" th:href="@{/solicitudes/{id}/mensajes(id=${n.solicitud.id})}"
+                           style="text-decoration:none; color:inherit;" th:text="${n.mensaje}"></a>
+                        <span th:if="${n.solicitud == null}" th:text="${n.mensaje}"></span>
+                    </p>
+                </div>
+                <span style="color:#999; font-size:12px; white-space:nowrap; margin-left:12px;"
+                      th:text="${#temporals.format(n.fecha, 'dd/MM HH:mm')}"></span>
+            </div>
+        </div>
+
+        <p th:if="${#lists.isEmpty(notificaciones)}" style="color:#999;">No tienes notificaciones.</p>
+    </section>
+
+</body>
+</html>

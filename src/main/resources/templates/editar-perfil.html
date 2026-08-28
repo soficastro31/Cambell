@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar perfil - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <a href="javascript:history.back()" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section class="auth-container">
+        <div class="auth-card">
+            <h2>Editar mis datos</h2>
+
+            <div th:if="${error}" style="color:#ff4d4d; font-weight:600; margin-bottom:15px;" th:text="${error}"></div>
+
+            <form th:action="@{/cliente/editar}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <label>Nombre</label>
+                <input type="text" name="nombre" th:value="${usuario.nombre}" required minlength="3"/>
+
+                <label>Correo</label>
+                <input type="email" name="correo" th:value="${usuario.correo}" required/>
+
+                <button type="submit" class="btn-hero-principal" style="margin-top:20px;">Guardar cambios</button>
+            </form>
+        </div>
+    </section>
+
+</body>
+</html>

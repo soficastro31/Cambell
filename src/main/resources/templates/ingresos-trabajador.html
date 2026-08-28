@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis ingresos - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/solicitudes/mis-trabajos}" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/solicitudes/mis-trabajos}" class="btn-nav">Mis trabajos</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 760px; margin: 0 auto;">
+        <h2>Mis ingresos</h2>
+
+        <div style="background:#1e1e1e; padding:25px; border-radius:8px; margin-bottom:25px; text-align:center;">
+            <p style="margin:0; color:#999; font-size:13px;">Total neto acumulado (tras comisión del 3%)</p>
+            <p style="margin:8px 0 0; font-size:36px; font-weight:800; color:#FF6B00;" th:text="'$ ' + ${totalIngresos}"></p>
+        </div>
+
+        <div th:each="p : ${pagos}" style="background:#1e1e1e; padding:16px 20px; border-radius:8px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <p style="margin:0; font-weight:600;" th:text="${p.solicitud.descripcion}"></p>
+                    <p style="margin:4px 0 0; color:#999;">
+                        Cliente: <span th:text="${p.solicitud.cliente.nombre}"></span> ·
+                        <span th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'dd/MM/yyyy HH:mm') : ''}"></span>
+                    </p>
+                </div>
+                <div style="text-align:right;">
+                    <p style="margin:0; color:#66bb6a; font-weight:600;" th:text="'+$ ' + ${p.netoTrabajador}"></p>
+                    <p style="margin:2px 0 0; color:#999; font-size:12px;" th:text="'bruto $ ' + ${p.montoTotal} + ' · comisión $ ' + ${p.comision}"></p>
+                </div>
+            </div>
+        </div>
+
+        <p th:if="${#lists.isEmpty(pagos)}" style="color:#999;">Aún no tienes pagos recibidos.</p>
+    </section>
+
+</body>
+</html>

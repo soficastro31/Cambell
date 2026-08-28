@@ -46,13 +46,15 @@ public DaoAuthenticationProvider authenticationProvider() {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/registro", "/login", "/css/**", "/images/**", "/api/**").permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
     .loginPage("/login")
+    .failureUrl("/login?error")
     .successHandler(successHandler)
     .permitAll()
-          ) ;
+) ;
         return http.build();
     }
 }

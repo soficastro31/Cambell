@@ -4,29 +4,86 @@
     <meta charset="UTF-8">
     <title>Solicitudes disponibles - Cambell</title>
     <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .filtro-tabla { width:100%; border-collapse: collapse; margin-bottom: 10px; }
+        .filtro-tabla td { padding: 4px 8px 4px 0; vertical-align: middle; }
+        .filtro-tabla label { font-size:12px; font-weight:600; color:#ccc; display:block; margin-bottom:4px; }
+        .filtro-tabla select, .filtro-tabla input {
+            width:100%; background:#2a2a2a; color:white; padding:8px; border-radius:6px; border:1px solid #333;
+        }
+        .caja-filtros { background:#1e1e1e; padding:20px; border-radius:8px; margin-bottom:25px; }
+        .categoria-badge { display:inline-block; background:#2a2418; color:#FF6B00; padding:3px 10px; border-radius:20px; font-size:12px; margin-left:8px; }
+    </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="logo">Cambell</div>
+    <div class="logo">Cambell</div>
+    <div class="nav-links">
+        <a th:href="@{/solicitudes/mis-trabajos}">Mis trabajos</a>
+        <a th:href="@{/pagos/ingresos}">Mis ingresos</a>
+        <a th:href="@{/cobertura}">Mi cobertura</a>
+        <a th:href="@{/notificaciones}">Notificaciones <span th:if="${noLeidos > 0}"
+               style="background:#FF6B00; color:#fff; border-radius:10px; padding:1px 7px; font-size:11px;" th:text="${noLeidos}"></span></a>
         <form th:action="@{/logout}" method="post" style="display:inline;">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-    <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
-</form>
-    </nav>
-
-    <section style="padding: 60px;">
-        <h2 style="margin-bottom: 30px;">Solicitudes disponibles en tu zona</h2>
-
-        <form th:action="@{/solicitudes/disponibles}" method="get" style="margin-bottom: 30px;">
-            <input type="text" name="zona" placeholder="Filtrar por zona (Ej. Chapinero, Bogotá)"
-                   style="padding:12px; border-radius:6px; border:1px solid #333; background:#2a2a2a; color:white; width:300px;"/>
-            <button type="submit" class="btn-hero-principal" style="width:auto; display:inline-block;">Buscar</button>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
         </form>
+    </div>
+</nav>
+    <section style="padding: 60px;">
+        <h2 style="margin-bottom: 30px;">Solicitudes disponibles</h2>
+
+        <!-- Filtro multicriterio -->
+        <div class="caja-filtros">
+            <form th:action="@{/solicitudes/disponibles}" method="get">
+                <table class="filtro-tabla">
+                    <tr>
+                        <td style="width:25%;">
+                            <label>Localidad</label>
+                            <select name="localidad" id="fLocalidad">
+                                <option value="">Todas</option>
+                                <option th:each="entry : ${localidades}" th:value="${entry.key}"
+                                        th:text="${entry.key}" th:selected="${entry.key == filtroLocalidad}"></option>
+                            </select>
+                        </td>
+                        <td style="width:25%;">
+                            <label>Barrio</label>
+                            <select name="barrio" id="fBarrio">
+                                <option value="">Todos</option>
+                            </select>
+                        </td>
+                        <td style="width:25%;">
+                            <label>Categoría</label>
+                            <select name="categoria">
+                                <option value="">Todas</option>
+                                <option th:each="c : ${categorias}" th:value="${c.name()}" th:text="${c.etiqueta}"
+                                        th:selected="${c.name() == filtroCategoria}"></option>
+                            </select>
+                        </td>
+                        <td style="width:25%;">
+                            <label>Precio ofertado</label>
+                            <div style="display:flex; gap:6px;">
+                                <input type="number" name="precioMin" placeholder="Mín" step="0.01" th:value="${filtroPrecioMin}"/>
+                                <input type="number" name="precioMax" placeholder="Máx" step="0.01" th:value="${filtroPrecioMax}"/>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <button type="submit" class="btn-hero-principal" style="width:auto; display:inline-block;">Filtrar</button>
+                <a th:href="@{/solicitudes/disponibles}" style="margin-left:10px; color:#FF6B00;">Limpiar filtros</a>
+            </form>
+        </div>
 
         <div th:each="s : ${solicitudes}" style="background:#1e1e1e; padding:20px; border-radius:8px; margin-bottom:15px;">
-            <p><strong th:text="${s.descripcion}"></strong></p>
-            <p>Zona: <span th:text="${s.zona}"></span></p>
+            <p><strong th:text="${s.descripcion}"></strong>
+                <span class="categoria-badge" th:if="${s.categoria != null}" th:text="${s.categoria.etiqueta}"></span>
+                <span th:if="${compatibles.contains(s.id)}" style="display:inline-block; background:#1e331e; color:#9ae6b4; padding:3px 10px; border-radius:20px; font-size:12px; margin-left:8px;">✓ Compatible con tu cobertura</span>
+            </p>
+            <p>Localidad: <span th:text="${s.localidad}"></span> &nbsp;·&nbsp; Barrio: <span th:text="${s.barrio}"></span></p>
+            <p th:if="${s.precioOfertado != null}">
+                Precio ofertado: <strong style="color:#FF6B00;" th:text="'$ ' + ${#numbers.formatDecimal(s.precioOfertado, 1, 0)}"></strong>
+            </p>
             <p>Cliente: <span th:text="${s.cliente.nombre}"></span></p>
 
             <form th:action="@{/solicitudes/{id}/aceptar(id=${s.id})}" method="post" style="display:inline-block; margin-right:10px;">
@@ -40,8 +97,53 @@
             </form>
         </div>
 
-        <p th:if="${#lists.isEmpty(solicitudes)}">No hay solicitudes disponibles en esta zona.</p>
+        <p th:if="${#lists.isEmpty(solicitudes)}">No hay solicitudes disponibles con esos criterios.</p>
     </section>
+
+    <script th:inline="javascript">
+        var SELECTED_BARRIO = /*[[${filtroBarrio}]]*/ null;
+
+        var localidadesData = JSON.parse(/*[[${localidadesJson}]]*/ '[]');
+
+        var fLocalidad = document.getElementById('fLocalidad');
+        var fBarrio = document.getElementById('fBarrio');
+
+        function poblarBarriosFiltro() {
+            var localidad = fLocalidad.value;
+            fBarrio.innerHTML = '';
+
+            var def = document.createElement('option');
+            def.value = '';
+            def.textContent = 'Todos';
+            fBarrio.appendChild(def);
+
+            if (!localidad) return;
+
+            for (var i = 0; i < localidadesData.length; i++) {
+                if (localidadesData[i].localidad === localidad) {
+                    var barrios = localidadesData[i].barrios;
+                    for (var j = 0; j < barrios.length; j++) {
+                        var op = document.createElement('option');
+                        op.value = barrios[j].nombre;
+                        op.textContent = barrios[j].nombre;
+                        if (SELECTED_BARRIO === barrios[j].nombre) {
+                            op.selected = true;
+                        }
+                        fBarrio.appendChild(op);
+                    }
+                    fBarrio.disabled = false;
+                    break;
+                }
+            }
+        }
+
+        fLocalidad.addEventListener('change', poblarBarriosFiltro);
+        window.addEventListener('DOMContentLoaded', function() {
+            // Reproduce la localidad seleccionada para rellenar el barrio al recargar
+            var sel = fLocalidad.options[fLocalidad.selectedIndex];
+            poblarBarriosFiltro();
+        });
+    </script>
 
 </body>
 </html>

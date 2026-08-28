@@ -4,22 +4,43 @@
     <meta charset="UTF-8">
     <title>Nueva solicitud - Cambell</title>
     <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #mapaSolicitud { height: 320px; width: 100%; border-radius: 8px; z-index: 1; }
+        .campo-map label { display:block; margin: 14px 0 6px; font-size:13px; font-weight:600; color:#ccc; }
+    </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="logo">Cambell</div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="javascript:history.back()" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        
         <div class="nav-links">
             <a th:href="@{/solicitudes/mis-solicitudes}">Mis solicitudes</a>
-            <form th:action="@{/logout}" method="post" style="display:inline;">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-    <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
-</form>
+            
+            <!-- Menú de tres líneas (Hamburguesa) -->
+            <div class="menu-container">
+                <button class="menu-btn" onclick="toggleMenu()" title="Menú">☰</button>
+                <div id="dropdownMenu" class="dropdown-content">
+                    <a th:href="@{/cliente/perfil}">Ver perfil</a>
+                    <a th:href="@{/cliente/editar}">Cambiar mis datos</a>
+                    <a th:href="@{/cliente/cambiar-password}">Cambiar contraseña</a>
+                    <hr>
+                    <form th:action="@{/logout}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit">Cerrar sesión</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </nav>
 
     <section class="auth-container">
-        <div class="auth-card">
+        <div class="auth-card" style="max-width:560px;">
             <h2>Solicitar un servicio</h2>
             <form th:action="@{/solicitudes/nueva}" th:object="${solicitud}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -27,13 +48,154 @@
                 <label>¿Qué necesitas?</label>
                 <input type="text" th:field="*{descripcion}" placeholder="Ej. Arreglo de fuga en la cocina" required/>
 
-                <label>Zona</label>
-                <input type="text" th:field="*{zona}" placeholder="Ej. Chapinero, Bogotá" required/>
+                <label>Categoría del servicio</label>
+                <select th:field="*{categoria}" required>
+                    <option value="">Selecciona una categoría</option>
+                    <option th:each="c : ${categorias}" th:value="${c.name()}" th:text="${c.etiqueta}"></option>
+                </select>
 
-                <button type="submit" class="btn-hero-principal">Enviar solicitud</button>
+                <div class="campo-map">
+                    <label>Localidad de Bogotá</label>
+                    <select id="selectLocalidad" required>
+                        <option value="">Selecciona una localidad</option>
+                        <option th:each="entry : ${localidades}" th:value="${entry.key}" th:text="${entry.key}"></option>
+                    </select>
+
+                    <label>Barrio</label>
+                    <select id="selectBarrio" required disabled>
+                        <option value="">Primero elige la localidad</option>
+                    </select>
+
+                    <label>Ubicación en el mapa (haz clic sobre el mapa para marcar el punto)</label>
+                    <div id="mapaSolicitud"></div>
+                    <small style="color:#999; font-size:11px;">El punto marcado define la zona exacta del trabajo.</small>
+                </div>
+
+                <label>Precio que ofertas ($)</label>
+                <input type="number" th:field="*{precioOfertado}" min="0" step="0.01" placeholder="Ej. 150000"/>
+
+                <input type="hidden" th:field="*{zona}"/>
+                <input type="hidden" id="inputLocalidad" th:field="*{localidad}"/>
+                <input type="hidden" id="inputBarrio" th:field="*{barrio}"/>
+                <input type="hidden" id="inputLatitud" th:field="*{latitud}"/>
+                <input type="hidden" id="inputLongitud" th:field="*{longitud}"/>
+
+                <button type="submit" class="btn-hero-principal" id="btnEnviar">Enviar solicitud</button>
             </form>
         </div>
     </section>
+
+    <script th:inline="javascript">
+        // ===== Datos de localidades/barrios desde el servidor (JSON) =====
+        var localidadesData = JSON.parse(/*[[${localidadesJson}]]*/ '[]');
+    </script>
+
+    <script>
+        // ===== Lógica de barrios + mapa Leaflet =====
+        var selectLocalidad = document.getElementById('selectLocalidad');
+        var selectBarrio = document.getElementById('selectBarrio');
+        var inputLocalidad = document.getElementById('inputLocalidad');
+        var inputBarrio = document.getElementById('inputBarrio');
+        var inputLatitud = document.getElementById('inputLatitud');
+        var inputLongitud = document.getElementById('inputLongitud');
+
+        var mapaLoc = L.map('mapaSolicitud').setView([4.6533, -74.0513], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(mapaLoc);
+
+        var marcador = null;
+        var datosBarrioEnMapa = null;
+
+        function poblarBarrios() {
+            var localidadSel = selectLocalidad.value;
+            selectBarrio.innerHTML = '';
+            selectBarrio.disabled = true;
+            inputLocalidad.value = localidadSel;
+            inputBarrio.value = '';
+
+            var opcionDefault = document.createElement('option');
+            opcionDefault.value = '';
+            opcionDefault.textContent = 'Elige un barrio';
+            selectBarrio.appendChild(opcionDefault);
+
+            for (var i = 0; i < localidadesData.length; i++) {
+                if (localidadesData[i].localidad === localidadSel) {
+                    var barrios = localidadesData[i].barrios;
+                    for (var j = 0; j < barrios.length; j++) {
+                        var op = document.createElement('option');
+                        op.value = barrios[j].nombre;
+                        op.textContent = barrios[j].nombre;
+                        op.dataset.lat = barrios[j].lat;
+                        op.dataset.lon = barrios[j].lon;
+                        selectBarrio.appendChild(op);
+                    }
+                    selectBarrio.disabled = false;
+                    break;
+                }
+            }
+            // Centrar en la localidad elegida
+            if (localidadSel) {
+                var ref = localidadesData.find(function(l){ return l.localidad === localidadSel; });
+                if (ref && ref.barrios.length > 0) {
+                    mapaLoc.setView([ref.barrios[0].lat, ref.barrios[0].lon], 13);
+                }
+            }
+        }
+
+        selectLocalidad.addEventListener('change', poblarBarrios);
+
+        selectBarrio.addEventListener('change', function() {
+            var opcion = selectBarrio.options[selectBarrio.selectedIndex];
+            inputBarrio.value = selectBarrio.value;
+            if (opcion && opcion.dataset.lat) {
+                var lat = parseFloat(opcion.dataset.lat);
+                var lon = parseFloat(opcion.dataset.lon);
+                ubicarMarcador(lat, lon);
+            }
+        });
+
+        mapaLoc.on('click', function(e) {
+            ubicarMarcador(e.latlng.lat, e.latlng.lng);
+        });
+
+        function ubicarMarcador(lat, lon) {
+            if (marcador) {
+                mapaLoc.removeLayer(marcador);
+            }
+            marcador = L.marker([lat, lon]).addTo(mapaLoc);
+            inputLatitud.value = lat;
+            inputLongitud.value = lon;
+        }
+
+        // Validar al enviar
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!inputLatitud.value || !inputLongitud.value) {
+                e.preventDefault();
+                alert('Por favor marca el punto de ubicación en el mapa.');
+            }
+        });
+    </script>
+
+    <script>
+        function toggleMenu() {
+            var menu = document.getElementById("dropdownMenu");
+            menu.style.display = (menu.style.display === "block") ? "none" : "block";
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.menu-btn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.style.display === "block") {
+                        openDropdown.style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
 
 </body>
 </html>

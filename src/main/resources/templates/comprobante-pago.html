@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprobante de pago - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .fila { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #2a2a2a; }
+        .desc { color:#999; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="javascript:history.back()" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/pagos/historial}" class="btn-nav">Historial</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 520px; margin: 0 auto;">
+
+        <div style="background:#1e1e1e; padding:30px; border-radius:10px; border:1px solid #333;">
+            <h2 style="margin-top:0; text-align:center; color:#FF6B00;">Comprobante de pago</h2>
+            <p style="text-align:center; color:#999;">Cambell · Servicios a domicilio</p>
+
+            <div style="margin-top:20px;">
+                <div class="fila"><span class="desc">Servicio</span><span th:text="${pago.solicitud.descripcion}"></span></div>
+                <div class="fila"><span class="desc">Cliente</span><span th:text="${pago.cliente.nombre}"></span></div>
+                <div class="fila"><span class="desc">Trabajador</span><span th:text="${pago.trabajador.nombre}"></span></div>
+                <div class="fila"><span class="desc">Método</span><span th:text="${pago.metodoPago != null ? (pago.metodoPago.tipo + ' · ' + pago.metodoPago.numeroEnmascarado) : '-'}"></span></div>
+                <div class="fila"><span class="desc">Fecha</span><span th:text="${pago.fechaPago != null ? #temporals.format(pago.fechaPago, 'dd/MM/yyyy HH:mm') : '-'}"></span></div>
+            </div>
+
+            <div style="margin-top:15px; background:#2a2a2a; padding:15px; border-radius:8px;">
+                <div class="fila" style="border:none;"><span>Monto total</span><span th:text="'$ ' + ${pago.montoTotal}"></span></div>
+                <div class="fila" style="border:none;"><span>Comisión (3%)</span><span th:text="'-$ ' + ${pago.comision}"></span></div>
+                <div class="fila" style="border:none;"><span class="desc">Neto trabajador</span><span th:text="'$ ' + ${pago.netoTrabajador}"></span></div>
+            </div>
+
+            <p style="text-align:center; margin-top:20px; color:#66bb6a;" th:text="'Estado: ' + ${pago.estado}"></p>
+        </div>
+    </section>
+
+</body>
+</html>

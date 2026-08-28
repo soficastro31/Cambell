@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de pagos - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/solicitudes/mis-solicitudes}" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/pagos/metodos}" class="btn-nav">Mis métodos</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 760px; margin: 0 auto;">
+        <h2>Historial de pagos</h2>
+
+        <div th:each="p : ${pagos}" style="background:#1e1e1e; padding:16px 20px; border-radius:8px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <p style="margin:0; font-weight:600;" th:text="${p.solicitud.descripcion}"></p>
+                    <p style="margin:4px 0 0; color:#999;">
+                        <span th:text="'$ ' + ${p.montoTotal}"></span> ·
+                        Comisión <span th:text="'$ ' + ${p.comision}"></span> ·
+                        <span th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'dd/MM/yyyy HH:mm') : 'Pendiente'}"></span>
+                    </p>
+                </div>
+                <div style="text-align:right;">
+                    <span th:text="${p.estado}" th:styleappend="${p.estado.name() == 'COMPLETADO'} ? 'color:#66bb6a;' : 'color:#f56565;'"></span>
+                    <a th:if="${p.estado.name() == 'COMPLETADO'}" th:href="@{/pagos/comprobante/{id}(id=${p.id})}" class="btn-hero-secundario"
+                       style="width:auto; display:block; margin-top:6px; text-decoration:none;">Comprobante</a>
+                </div>
+            </div>
+        </div>
+
+        <p th:if="${#lists.isEmpty(pagos)}" style="color:#999;">Aún no tienes pagos registrados.</p>
+    </section>
+
+</body>
+</html>

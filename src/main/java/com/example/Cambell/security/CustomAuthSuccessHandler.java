@@ -15,6 +15,7 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                          Authentication authentication) throws IOException, ServletException {
+
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String rol = userDetails.getUsuario().getRol().name();
 
@@ -22,6 +23,8 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect("/solicitudes/disponibles");
         } else if (rol.equals("CLIENTE")) {
             response.sendRedirect("/solicitudes/nueva");
+        } else if (rol.equals("ADMINISTRADOR")) {
+            response.sendRedirect("/admin/verificaciones");
         } else {
             response.sendRedirect("/");
         }

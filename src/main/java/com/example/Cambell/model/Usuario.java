@@ -1,6 +1,7 @@
 package com.example.Cambell.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(name = "usuarios")
@@ -10,22 +11,47 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 3, max = 100, message = "El nombre debe tener entre 3 y 100 caracteres")
     @Column(nullable = false)
     private String nombre;
 
+    @NotBlank(message = "El correo es obligatorio")
+    @Email(message = "Ingresa un correo válido (ejemplo@dominio.com)")
     @Column(unique = true, nullable = false)
     private String correo;
 
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 8, max = 64, message = "La contraseña debe tener entre 8 y 64 caracteres")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+             message = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número")
     @Column(nullable = false)
     private String password;
 
+    @NotNull(message = "Debes seleccionar un rol")
     @Enumerated(EnumType.STRING)
     private Rol rol;
 
     @Enumerated(EnumType.STRING)
     private EstadoVerificacion estadoVerificacion = EstadoVerificacion.PENDIENTE;
 
-    // Getters y setters
+    @Column(name = "calificacion_promedio")
+    private Double calificacionPromedio = 0.0;
+
+    @Column(name = "total_calificaciones")
+    private Integer totalCalificaciones = 0;
+
+    @Pattern(regexp = "^[0-9]{6,15}$", message = "El documento debe tener solo números (6 a 15 dígitos)")
+    @Column(name = "numero_documento")
+    private String numeroDocumento;
+
+    @Column(name = "ruta_documento")
+    private String rutaDocumento;
+
+    @Column(name = "ruta_selfie")
+    private String rutaSelfie;
+
+    // Getters y setters (igual que antes)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -43,23 +69,19 @@ public class Usuario {
 
     public EstadoVerificacion getEstadoVerificacion() { return estadoVerificacion; }
     public void setEstadoVerificacion(EstadoVerificacion estadoVerificacion) { this.estadoVerificacion = estadoVerificacion; }
-   
-   
-    @Column(name = "numero_documento")
-    private String numeroDocumento;
-
-    @Column(name = "ruta_documento")
-    private String rutaDocumento;
-
-    @Column(name = "ruta_selfie")
-    private String rutaSelfie;
 
     public String getNumeroDocumento() { return numeroDocumento; }
-public void setNumeroDocumento(String numeroDocumento) { this.numeroDocumento = numeroDocumento; }
+    public void setNumeroDocumento(String numeroDocumento) { this.numeroDocumento = numeroDocumento; }
 
-public String getRutaDocumento() { return rutaDocumento; }
-public void setRutaDocumento(String rutaDocumento) { this.rutaDocumento = rutaDocumento; }
+    public String getRutaDocumento() { return rutaDocumento; }
+    public void setRutaDocumento(String rutaDocumento) { this.rutaDocumento = rutaDocumento; }
 
-public String getRutaSelfie() { return rutaSelfie; }
-public void setRutaSelfie(String rutaSelfie) { this.rutaSelfie = rutaSelfie; }
+    public String getRutaSelfie() { return rutaSelfie; }
+    public void setRutaSelfie(String rutaSelfie) { this.rutaSelfie = rutaSelfie; }
+
+    public Double getCalificacionPromedio() { return calificacionPromedio; }
+public void setCalificacionPromedio(Double calificacionPromedio) { this.calificacionPromedio = calificacionPromedio; }
+
+public Integer getTotalCalificaciones() { return totalCalificaciones; }
+public void setTotalCalificaciones(Integer totalCalificaciones) { this.totalCalificaciones = totalCalificaciones; }
 }

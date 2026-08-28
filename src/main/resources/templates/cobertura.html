@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi cobertura - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/solicitudes/mis-trabajos}" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/solicitudes/mis-trabajos}">Mis trabajos</a>
+            <a th:href="@{/solicitudes/disponibles}">Disponibles</a>
+            <a th:href="@{/notificaciones}">Notificaciones</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 720px; margin: 0 auto;">
+        <h2>Mi cobertura y disponibilidad</h2>
+        <p style="color:#999;">Define dónde y cuándo estás disponible. Así el sistema te notificará las solicitudes compatibles (asignación automática).</p>
+
+        <div th:if="${ok}" style="background:#1e331e; color:#9ae6b4; padding:12px; border-radius:8px; margin-bottom:15px;">
+            <span th:text="${ok}"></span>
+        </div>
+
+        <form th:action="@{/cobertura}" method="post" th:object="${cobertura}" style="background:#1e1e1e; padding:24px; border-radius:8px;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <label>Radio de cobertura (km)</label>
+            <input type="number" name="radioKm" min="1" max="50" step="0.5"
+                   th:value="${cobertura != null ? cobertura.radioKm : 10}"
+                   style="width:100%; background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333; margin-bottom:15px;"/>
+
+            <label>Horario disponible</label>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <input type="time" name="horaInicio" th:value="${cobertura != null ? cobertura.horaInicio : '08:00'}"
+                       style="background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333;"/>
+                <input type="time" name="horaFin" th:value="${cobertura != null ? cobertura.horaFin : '18:00'}"
+                       style="background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333;"/>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom:15px;">
+                <input type="checkbox" name="disponible" value="true"
+                       th:checked="${cobertura == null or cobertura.disponible}"/> Estoy disponible ahora
+            </label>
+
+            <label>Especialidades (dejar vacío para todas)</label>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                <label th:each="c : ${categorias}" style="display:flex; align-items:center; gap:6px; background:#2a2a2a; padding:8px 12px; border-radius:20px;">
+                    <input type="checkbox" name="categorias" th:value="${c.name()}"
+                           th:checked="${cobertura != null and cobertura.categorias.contains(c)}"/> <span th:text="${c.etiqueta}"></span>
+                </label>
+            </div>
+
+            <label>Localidades de cobertura (dejar vacío para todas)</label>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+                <label th:each="loc : ${localidades}" style="display:flex; align-items:center; gap:6px; background:#2a2a2a; padding:8px 12px; border-radius:20px;">
+                    <input type="checkbox" name="localidades" th:value="${loc}"
+                           th:checked="${cobertura != null and cobertura.localidades.contains(loc)}"/> <span th:text="${loc}"></span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-hero-principal" style="width:auto; display:inline-block;">Guardar cobertura</button>
+        </form>
+    </section>
+
+</body>
+</html>

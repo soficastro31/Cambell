@@ -37,10 +37,15 @@ body {
     color: var(--gris-claro);
 }
 
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .nav-links a {
     color: var(--blanco);
     text-decoration: none;
-    margin-left: 30px;
     font-weight: 500;
     transition: color 0.2s ease;
 }
@@ -110,6 +115,8 @@ body {
     border-radius: 6px;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     display: inline-block;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-hero-principal:hover {
@@ -127,6 +134,7 @@ body {
     border: 2px solid #444;
     transition: border-color 0.15s ease, transform 0.15s ease;
     display: inline-block;
+    cursor: pointer;
 }
 
 .btn-hero-secundario:hover {
@@ -247,4 +255,126 @@ body {
 
 .auth-link a:hover {
     text-decoration: underline;
+}
+
+/* --- Nuevos estilos para botón volver, menú hamburguesa y tarjetas --- */
+
+.nav-volver {
+    color: var(--blanco);
+    text-decoration: none;
+    font-size: 22px;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+
+.nav-volver:hover {
+    color: var(--naranja);
+}
+
+.menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: var(--blanco);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 5px;
+    transition: color 0.2s ease;
+}
+
+.menu-btn:hover {
+    color: var(--naranja);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 45px;
+    background-color: #1e1e1e;
+    min-width: 230px;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    z-index: 1000;
+    overflow: hidden;
+    border: 1px solid #2a2a2a;
+}
+
+.dropdown-content a, 
+.dropdown-content button {
+    color: var(--blanco);
+    padding: 12px 18px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+    background: none;
+    border: none;
+    width: 100%;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-content a:hover, 
+.dropdown-content button:hover {
+    background-color: #2a2a2a;
+    color: var(--naranja);
+}
+
+.dropdown-content hr {
+    border: 0;
+    height: 1px;
+    background: #2a2a2a;
+    margin: 0;
+}
+
+.dropdown-content .btn-danger {
+    color: #ff4d4d;
+}
+
+.dropdown-content .btn-danger:hover {
+    background-color: #3a1a1a;
+    color: #ff4d4d;
+}
+
+.solicitudes-container {
+    padding: 60px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.solicitudes-container h2 {
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.solicitud-card {
+    background-color: #1e1e1e;
+    padding: 24px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #2a2a2a;
+}
+
+.solicitud-card p {
+    margin-bottom: 8px;
+    color: var(--gris-claro);
+}
+
+.solicitud-card strong {
+    color: var(--blanco);
+    font-size: 16px;
+}
+
+.no-solicitudes {
+    color: var(--gris-claro);
+    text-align: center;
+    font-size: 16px;
+    margin-top: 40px;
 }

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis trabajos - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .ubicacion-caja { margin:10px 0; padding:12px; border-radius:8px; border:1px solid #333; }
+        .oculto { display:none; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Cambell</div>
+        <div class="nav-links">
+            <a th:href="@{/solicitudes/disponibles}">Disponibles</a>
+            <a th:href="@{/pagos/ingresos}">Mis ingresos</a>
+            <a th:href="@{/cobertura}">Mi cobertura</a>
+            <a th:href="@{/notificaciones}">Notificaciones <span th:if="${noLeidos > 0}"
+                   style="background:#FF6B00; color:#fff; border-radius:10px; padding:1px 7px; font-size:11px;" th:text="${noLeidos}"></span></a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section style="padding: 60px;">
+        <h2 style="margin-bottom: 30px;">Mis trabajos en curso</h2>
+
+        <div th:each="s : ${trabajos}" style="background:#1e1e1e; padding:20px; border-radius:8px; margin-bottom:15px;">
+            <p><strong th:text="${s.descripcion}"></strong></p>
+            <p>Localidad: <span th:text="${s.localidad}"></span> &nbsp;·&nbsp; Barrio: <span th:text="${s.barrio}"></span></p>
+            <p>Cliente: <span th:text="${s.cliente.nombre}"></span></p>
+
+            <!-- Revelado progresivo de la ubicación: solo localidad/barrio al inicio;
+                 el punto exacto se muestra únicamente al pulsar el botón y por tiempo limitado. -->
+            <div class="ubicacion-caja" style="background:#151a15;" th:attr="data-id=${s.id}">
+                <p style="margin:0 0 8px; font-size:12px; color:#999;">Ubicación del trabajo</p>
+                <p style="margin:0 0 10px;">
+                    <span th:text="'Zona aproximada: ' + ${s.zona}"></span>
+                </p>
+                <button type="button" class="btn-hero-principal reveal-btn" style="width:auto;" onclick="revelarUbicacion(this)">Iniciar viaje y ver punto exacto</button>
+                <div class="oculto reveal-caja">
+                    <p style="margin:12px 0 4px; font-size:12px; color:#FF6B00;">
+                        Ubicación exacta visible por <strong class="temporizador">30:00</strong> min
+                    </p>
+                    <a class="btn-hero-principal reveal-enlace" style="width:auto; display:inline-block; margin-top:6px;" target="_blank" rel="noopener">
+                        Abrir en Waze
+                    </a>
+                </div>
+            </div>
+
+            <form th:action="@{/solicitudes/{id}/finalizar(id=${s.id})}" method="post" enctype="multipart/form-data" style="margin-top:15px; border-top:1px solid #333; padding-top:15px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <label>Foto del trabajo terminado (obligatoria)</label>
+                <input type="file" name="evidencia" accept="image/*" required
+                       style="margin-bottom:12px;"/><br/>
+                <label>Código de finalización (proporcionado por el cliente)</label>
+                <input type="text" name="codigo" required maxlength="6" placeholder="XXXXXX"
+                       style="width:180px; background:#2a2a2a; color:white; padding:10px; border-radius:6px; border:1px solid #333;"/>
+                <p style="font-size:12px; color:#999;">Pide este código al cliente para poder finalizar el trabajo.</p><br/>
+                <button type="submit" class="btn-hero-principal" style="width:auto;">Finalizar trabajo</button>
+            </form>
+
+            <a th:href="@{/solicitudes/{id}/mensajes(id=${s.id})}" class="btn-hero-secundario"
+               style="width:auto; display:inline-block; text-decoration:none; margin-top:10px;">💬 Chat con el cliente</a>
+
+            <!-- HU-S07: liberar el trabajo para reasignarlo a otro trabajador compatible -->
+            <form th:action="@{/solicitudes/{id}/liberar(id=${s.id})}" method="post" style="display:inline; margin-left:8px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn-hero-secundario" style="width:auto; background:#3a1e1e; border-color:#7a3838;"
+                        title="Libera este trabajo para que se reasigne a otro trabajador compatible">Liberar y reasignar</button>
+            </form>
+        </div>
+
+        <p th:if="${errorFinalizar}" style="color:#ff4d4d; font-weight:600; margin:15px 0;" th:text="${errorFinalizar}"></p>
+
+        <p th:if="${#lists.isEmpty(trabajos)}">No tienes trabajos activos en este momento.</p>
+    </section>
+
+    <script th:inline="javascript">
+        // Puntos exactos por solicitud: { id: { lat, lon } }
+        var puntosExactos = JSON.parse(/*[[${puntosExactosJson}]]*/ '{}');
+
+        var temporizadores = {};
+
+        function revelarUbicacion(boton) {
+            var caja = boton.closest('.ubicacion-caja');
+            var id = caja.getAttribute('data-id');
+            var punto = puntosExactos[id];
+            if (!punto || !punto.lat || !punto.lon) {
+                alert('El cliente aún no registró el punto exacto en el mapa.');
+                return;
+            }
+            var enlace = caja.querySelector('.reveal-enlace');
+            enlace.href = 'https://waze.com/ul?ll=' + punto.lat + ',' + punto.lon + '&navigate=yes';
+            caja.querySelector('.reveal-caja').classList.remove('oculto');
+            boton.classList.add('oculto');
+            iniciarTemporizador(caja);
+        }
+
+        function iniciarTemporizador(caja) {
+            var segundosTotales = 30 * 60;
+            var ref = caja.querySelector('.temporizador');
+            temporizadores[caja.getAttribute('data-id')] = setInterval(function() {
+                segundosTotales--;
+                if (segundosTotales <= 0) {
+                    clearInterval(temporizadores[caja.getAttribute('data-id')]);
+                    caja.querySelector('.reveal-caja').classList.add('oculto');
+                    caja.querySelector('.reveal-btn').classList.remove('oculto');
+                    alert('El punto exacto ya no está disponible. Pulsa el botón de nuevo para volver a verlo.');
+                    return;
+                }
+                var m = Math.floor(segundosTotales / 60);
+                var s = Math.floor(segundosTotales % 60);
+                ref.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+            }, 1000);
+        }
+    </script>
+
+</body>
+</html>

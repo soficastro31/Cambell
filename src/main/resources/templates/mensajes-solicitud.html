@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mensajes - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .chat-caja { background:#1e1e1e; padding:20px; border-radius:8px; margin-bottom:20px; }
+        .chat-burbuja { padding:10px 14px; border-radius:12px; margin-bottom:8px; max-width:75%; }
+        .chat-propio { background:#2a4a2a; margin-left:auto; text-align:right; }
+        .chat-ajeno { background:#2a2a2a; }
+        .chat-meta { font-size:11px; color:#999; margin-top:4px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:if="${usuarioActual.rol.name() == 'CLIENTE'}" th:href="@{/solicitudes/mis-solicitudes}" class="nav-volver" title="Volver">←</a>
+            <a th:if="${usuarioActual.rol.name() == 'TRABAJADOR'}" th:href="@{/solicitudes/mis-trabajos}" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:if="${usuarioActual.rol.name() == 'CLIENTE'}" th:href="@{/solicitudes/mis-solicitudes}" class="btn-nav">Mis solicitudes</a>
+            <a th:if="${usuarioActual.rol.name() == 'TRABAJADOR'}" th:href="@{/solicitudes/mis-trabajos}" class="btn-nav">Mis trabajos</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 760px; margin: 0 auto;">
+        <h2>Mensajes del trabajo</h2>
+        <p style="color:#ccc;">
+            <strong th:text="${solicitud.descripcion}"></strong> ·
+            Cliente: <span th:text="${solicitud.cliente.nombre}"></span> ·
+            Trabajador: <span th:text="${solicitud.trabajador != null ? solicitud.trabajador.nombre : 'Sin asignar'}"></span>
+        </p>
+
+        <div class="chat-caja">
+            <div th:if="${#lists.isEmpty(mensajes)}" style="text-align:center; color:#999; padding:30px;">
+                Aún no hay mensajes. Inicia la conversación.
+            </div>
+            <div th:each="m : ${mensajes}"
+                 th:classappend="${m.emisor.id == usuarioActual.id} ? 'chat-burbuja chat-propio' : 'chat-burbuja chat-ajeno'">
+                <p style="margin:0; white-space:pre-wrap;" th:text="${m.contenido}"></p>
+                <div class="chat-meta">
+                    <span th:text="${m.emisor.nombre}"></span> · <span th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy HH:mm')}"></span>
+                </div>
+            </div>
+        </div>
+
+        <form th:action="@{/solicitudes/{id}/mensajes(id=${solicitud.id})}" method="post" style="background:#1e1e1e; padding:20px; border-radius:8px;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <textarea name="contenido" rows="3" required maxlength="2000" placeholder="Escribe tu mensaje..."
+                      style="width:100%; background:#2a2a2a; color:white; padding:12px; border-radius:6px; border:1px solid #333; resize:vertical;"></textarea>
+            <br/><br/>
+            <button type="submit" class="btn-hero-principal" style="width:auto; display:inline-block;">Enviar</button>
+        </form>
+    </section>
+
+</body>
+</html>
