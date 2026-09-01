@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportar - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="javascript:history.back()" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/notificaciones}">Notificaciones
+                <span th:if="${noLeidos > 0}" style="background:#FF6B00; color:#fff; border-radius:10px; padding:1px 7px; font-size:11px;" th:text="${noLeidos}"></span>
+            </a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section class="auth-container">
+        <div class="auth-card" style="max-width:520px;">
+            <h2>Reportar comportamiento inseguro</h2>
+
+            <p th:if="${errorReporte}" style="color:#ff4d4d; font-weight:600;" th:text="${errorReporte}"></p>
+
+            <div th:if="${reportado != null}" style="background:#1e1e1e; padding:15px; border-radius:8px; margin-bottom:20px;">
+                <p style="margin:0; font-size:12px; color:#999;">Estás reportando a</p>
+                <p style="margin:4px 0 0; font-weight:700;" th:text="${reportado.nombre}"></p>
+                <p style="margin:4px 0 0; color:#bbb;" th:text="${reportado.correo}"></p>
+            </div>
+
+            <form th:action="@{/solicitudes/{id}/reportar(id=${solicitud.id})}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <label>Describe el motivo del reporte</label>
+                <textarea name="motivo" rows="5" required maxlength="1000"
+                          placeholder="Describe la conducta inapropiada o insegura..."
+                          style="width:100%; background:#2a2a2a; color:white; padding:12px; border-radius:6px; border:1px solid #333;"></textarea>
+                <button type="submit" class="btn-hero-principal" style="margin-top:25px; width:100%; background:#7a2b2b;">Enviar reporte</button>
+            </form>
+        </div>
+    </section>
+</body>
+</html>

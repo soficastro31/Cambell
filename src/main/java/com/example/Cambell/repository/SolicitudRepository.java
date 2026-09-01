@@ -13,6 +13,10 @@ import java.util.List;
 public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
     List<Solicitud> findByZonaAndEstado(String zona, EstadoSolicitud estado);
     List<Solicitud> findByEstado(EstadoSolicitud estado);
+
+    // Para los schedulers (HU-S07, HU-S09)
+    List<Solicitud> findByEstadoAndFechaCreacionBefore(EstadoSolicitud estado, java.time.LocalDateTime fecha);
+    List<Solicitud> findByEstadoAndCalificacionIsNullAndFechaFinalizacionBefore(EstadoSolicitud estado, java.time.LocalDateTime fecha);
     List<Solicitud> findByCliente(Usuario cliente);
     List<Solicitud> findByTrabajador(Usuario trabajador);
     List<Solicitud> findByTrabajadorAndEstado(Usuario trabajador, EstadoSolicitud estado);

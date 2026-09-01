@@ -21,6 +21,7 @@ public class SolicitudService {
     public Solicitud crear(Solicitud solicitud) {
         solicitud.setEstado(EstadoSolicitud.PENDIENTE);
         solicitud.setCodigoFinalizacion(generarCodigo());
+        solicitud.setFechaCreacion(java.time.LocalDateTime.now());
         // Reconstruir zona a partir de localidad/barrio si no se indicó manualmente
         if (solicitud.getZona() == null || solicitud.getZona().isBlank()) {
             solicitud.setZona(componerZona(solicitud.getLocalidad(), solicitud.getBarrio()));
@@ -84,8 +85,26 @@ public class SolicitudService {
         return solicitudRepository.findByTrabajadorAndEstado(trabajador, EstadoSolicitud.ACEPTADA);
     }
 
+    // HU-T13: historial de trabajos del trabajador (excluye las pendientes por asignar)
+    public List<Solicitud> historialPorTrabajador(Usuario trabajador) {
+        return solicitudRepository.findByTrabajador(trabajador).stream()
+                .filter(s -> s.getEstado() != EstadoSolicitud.PENDIENTE)
+                .sorted((a, b) -> b.getId().compareTo(a.getId()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    // HU-C06: cantidad de trabajos completados por un trabajador
+    public long contarCompletadosPorTrabajador(Usuario trabajador) {
+        return solicitudRepository.findByTrabajadorAndEstado(trabajador, EstadoSolicitud.COMPLETADA).size();
+    }
+
     public Optional<Solicitud> buscarPorId(Long id) {
         return solicitudRepository.findById(id);
+    }
+
+    public Solicitud buscar(Long id) {
+        return solicitudRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
     }
 
     public Solicitud aceptar(Long id, Usuario trabajador) {
@@ -144,6 +163,7 @@ public class SolicitudService {
 
         solicitud.setRutaEvidencia(rutaEvidencia);
         solicitud.setEstado(EstadoSolicitud.COMPLETADA);
+        solicitud.setFechaFinalizacion(java.time.LocalDateTime.now());
 
         Solicitud guardada = solicitudRepository.save(solicitud);
         notificadorSolicitud.notificar(new EventoSolicitud(EventoSolicitud.Tipo.COMPLETADA, guardada));

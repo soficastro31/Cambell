@@ -1,7 +1,9 @@
 package com.example.Cambell.controller;
 
 import com.example.Cambell.model.EstadoVerificacion;
+import com.example.Cambell.model.Rol;
 import com.example.Cambell.model.Usuario;
+import com.example.Cambell.service.LocalidadesBogota;
 import com.example.Cambell.service.UsuarioService;
 import com.example.Cambell.service.VerificacionFacialService;
 import com.example.Cambell.strategy.EstrategiaVerificacion;
@@ -43,6 +45,7 @@ public class RegistroController {
     @GetMapping("/registro")
     public String mostrarFormulario(Model model) {
         model.addAttribute("usuario", new Usuario());
+        model.addAttribute("localidades", LocalidadesBogota.obtenerLocalidades().keySet());
         return "registro";
     }
 
@@ -53,10 +56,22 @@ public class RegistroController {
                              @RequestParam(required = false) MultipartFile selfieFile,
                              Model model) throws IOException {
 
-        boolean esTrabajador = usuario.getRol() != null && usuario.getRol().name().equals("TRABAJADOR");
+        // El catálogo de localidades se vuelve a pasar por si hay errores y se re-renderiza
+        model.addAttribute("localidades", LocalidadesBogota.obtenerLocalidades().keySet());
 
-        // Validación extra: si es trabajador, documento y fotos son obligatorios
-        if (esTrabajador) {
+        Rol rol = usuario.getRol();
+        boolean esTrabajador = rol != null && rol.name().equals("TRABAJADOR");
+
+        // Validación extra por rol
+        if (!esTrabajador) {
+            // HU-C01: cliente (y aliado) deben registrar teléfono y ubicación
+            if (usuario.getTelefono() == null || usuario.getTelefono().isBlank()) {
+                resultado.rejectValue("telefono", "error.usuario", "El teléfono es obligatorio");
+            }
+            if (usuario.getLocalidad() == null || usuario.getLocalidad().isBlank()) {
+                resultado.rejectValue("localidad", "error.usuario", "Selecciona tu localidad");
+            }
+        } else {
             if (usuario.getNumeroDocumento() == null || usuario.getNumeroDocumento().isBlank()) {
                 resultado.rejectValue("numeroDocumento", "error.usuario", "El número de documento es obligatorio para trabajadores");
             }
@@ -70,6 +85,30 @@ public class RegistroController {
 
         boolean faltanArchivosTrabajador = esTrabajador &&
                 ((documentoFile == null || documentoFile.isEmpty()) || (selfieFile == null || selfieFile.isEmpty()));
+
+        // Datos ya en uso (HU-C01 Esc.2/HU-T02): mensaje claro, no pantalla en blanco.
+        // Solo se comprueban los campos que aplican al rol elegido.
+        boolean hayDuplicado = false;
+        if (usuario.getCorreo() != null && !usuario.getCorreo().isBlank()
+                && usuarioService.existePorCorreo(usuario.getCorreo())) {
+            resultado.rejectValue("correo", "error.usuario", "Este correo ya está registrado. Inicia sesión o usa otro correo.");
+            hayDuplicado = true;
+        }
+        if (esTrabajador && usuario.getNumeroDocumento() != null && !usuario.getNumeroDocumento().isBlank()
+                && usuarioService.existePorNumeroDocumento(usuario.getNumeroDocumento())) {
+            resultado.rejectValue("numeroDocumento", "error.usuario", "Este número de documento ya está registrado con otra cuenta.");
+            hayDuplicado = true;
+        }
+        if (!esTrabajador && usuario.getTelefono() != null && !usuario.getTelefono().isBlank()
+                && usuarioService.existePorTelefono(usuario.getTelefono())) {
+            resultado.rejectValue("telefono", "error.usuario", "Este teléfono ya está registrado con otra cuenta.");
+            hayDuplicado = true;
+        }
+
+        if (hayDuplicado) {
+            model.addAttribute("errorGeneral",
+                    "Ya existe una cuenta con uno de los datos ingresados. Revisa el mensaje en el campo correspondiente.");
+        }
 
         if (resultado.hasErrors() || faltanArchivosTrabajador) {
             return "registro"; // vuelve al formulario mostrando los errores
@@ -105,6 +144,11 @@ public class RegistroController {
                     usuario.setEstadoVerificacion(EstadoVerificacion.PENDIENTE);
                 }
             }
+        }
+
+        // Los clientes/aliados quedan activos; los trabajadores pasan por verificación
+        if (!esTrabajador) {
+            usuario.setEstadoVerificacion(EstadoVerificacion.APROBADO);
         }
 
         usuarioService.registrar(usuario);

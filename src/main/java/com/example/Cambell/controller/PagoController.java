@@ -6,6 +6,7 @@ import com.example.Cambell.service.MensajeService;
 import com.example.Cambell.service.PagoService;
 import com.example.Cambell.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -124,5 +125,42 @@ public class PagoController {
         model.addAttribute("totalIngresos", pagoService.ingresosTrabajador(userDetails.getUsuario()));
         model.addAttribute("noLeidos", mensajeService.contarNoLeidos(userDetails.getUsuario()));
         return "ingresos-trabajador";
+    }
+
+    // HU-T14: exportar el reporte de ingresos del trabajador (CSV compatible con Excel)
+    @GetMapping("/ingresos/exportar")
+    public ResponseEntity<String> exportarIngresos(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate desde,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate hasta) {
+        java.time.LocalDateTime desdeDt = desde != null ? desde.atStartOfDay() : null;
+        java.time.LocalDateTime hastaDt = hasta != null ? hasta.plusDays(1).atStartOfDay() : null;
+        java.util.List<Pago> pagos = pagoService.pagosTrabajadorEnRango(userDetails.getUsuario(), desdeDt, hastaDt);
+
+        StringBuilder csv = new StringBuilder("Fecha,Solicitud,Cliente,Monto_Total,Comision(3%),Neto_Recibido\n");
+        for (Pago p : pagos) {
+            csv.append(p.getFechaPago() != null ? p.getFechaPago().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "")
+               .append(",").append(escapar(p.getSolicitud().getDescripcion())).append(",")
+               .append(escapar(p.getCliente().getNombre())).append(",")
+               .append(p.getMontoTotal()).append(",").append(p.getComision()).append(",")
+               .append(p.getNetoTrabajador()).append("\n");
+        }
+        double total = pagos.stream().mapToDouble(p -> p.getNetoTrabajador() != null ? p.getNetoTrabajador() : 0).sum();
+        csv.append("\nTotal neto,,,,").append(Math.round(total * 100.0) / 100.0).append("\n");
+
+        String nombre = "ingresos_trabajador_" + java.time.LocalDate.now() + ".csv";
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.parseMediaType("text/csv;charset=UTF-8"));
+        headers.setContentDispositionFormData("attachment", nombre);
+        return new ResponseEntity<>(csv.toString(), headers, org.springframework.http.HttpStatus.OK);
+    }
+
+    private String escapar(String valor) {
+        if (valor == null) return "";
+        String limpio = valor.replace("\"", "\"\"");
+        if (limpio.contains(",") || limpio.contains("\"") || limpio.contains("\n")) {
+            return "\"" + limpio + "\"";
+        }
+        return limpio;
     }
 }

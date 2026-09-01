@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de actividad - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .admin-nav a { color:#ccc; text-decoration:none; margin-left:18px; font-weight:500; }
+        .admin-nav a.activo { color:#FF6B00; }
+        .tabla-act { width:100%; border-collapse:collapse; margin-top:10px; }
+        .tabla-act th, .tabla-act td { border:1px solid #333; padding:10px; text-align:left; }
+        .tabla-act th { background:#1e1e1e; }
+        .chip { padding:2px 10px; border-radius:10px; font-size:12px; font-weight:700; }
+    </style>
+</head>
+<body>
+    <nav class="navbar admin-nav">
+        <div class="logo">Cambell · Admin</div>
+        <div>
+            <a th:classappend="${seccion == 'verificaciones'} ? 'activo'" th:href="@{/admin/verificaciones}">Verificaciones</a>
+            <a th:classappend="${seccion == 'usuarios'} ? 'activo'" th:href="@{/admin/usuarios}">Usuarios</a>
+            <a th:classappend="${seccion == 'reportes'} ? 'activo'" th:href="@{/admin/reportes}">Reportes</a>
+            <a th:classappend="${seccion == 'anuncios'} ? 'activo'" th:href="@{/admin/anuncios}">Anuncios</a>
+            <a th:classappend="${seccion == 'estadisticas'} ? 'activo'" th:href="@{/admin/estadisticas}">Estadísticas</a>
+            <form th:action="@{/logout}" method="post" style="display:inline; margin-left:18px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px;">
+        <a th:href="@{/admin/usuarios}" style="color:#8f8fff;">← Volver a usuarios</a>
+        <h2 style="margin:15px 0 5px;">Historial de actividad (HU-A11)</h2>
+        <p style="color:#bbb;" th:text="${usuario.nombre + ' · ' + usuario.correo + ' · ' + usuario.rol}"></p>
+
+        <table class="tabla-act">
+            <tr><th>Fecha</th><th>Tipo</th><th>Detalle</th></tr>
+            <tr th:each="a : ${actividad}">
+                <td th:text="${a.fecha != null ? #temporals.format(a.fecha, 'yyyy-MM-dd HH:mm') : '—'}"></td>
+                <td>
+                    <span th:switch="${a.tipo}" class="chip">
+                        <span th:case="'Solicitud'" style="background:#1e1e4a; color:#8f8fff;">Solicitud</span>
+                        <span th:case="'Pago'" style="background:#14401f; color:#5ae66a;">Pago</span>
+                        <span th:case="'Reporte'" style="background:#401414; color:#ff6b6b;">Reporte</span>
+                    </span>
+                </td>
+                <td th:text="${a.detalle}"></td>
+            </tr>
+        </table>
+        <p th:if="${#lists.isEmpty(actividad)}">Sin actividad registrada.</p>
+    </section>
+</body>
+</html>

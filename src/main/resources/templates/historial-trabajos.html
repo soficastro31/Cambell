@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de trabajos - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Cambell</div>
+        <div class="nav-links">
+            <a th:href="@{/solicitudes/disponibles}">Disponibles</a>
+            <a th:href="@{/solicitudes/mis-trabajos}">Trabajos en curso</a>
+            <a th:href="@{/pagos/ingresos}">Mis ingresos</a>
+            <a th:href="@{/cobertura}">Mi cobertura</a>
+            <a th:href="@{/notificaciones}">Notificaciones <span th:if="${noLeidos > 0}"
+                   style="background:#FF6B00; color:#fff; border-radius:10px; padding:1px 7px; font-size:11px;" th:text="${noLeidos}"></span></a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section style="padding: 60px;">
+        <h2 style="margin-bottom: 30px;">Historial de trabajos</h2>
+
+        <div th:each="s : ${historial}" style="background:#1e1e1e; padding:20px; border-radius:8px; margin-bottom:15px;">
+            <p><strong th:text="${s.descripcion}"></strong></p>
+            <p>Cliente: <span th:text="${s.cliente.nombre}"></span> &nbsp;·&nbsp; Localidad: <span th:text="${s.localidad}"></span></p>
+            <p>
+                <span style="padding:2px 10px; border-radius:10px; font-size:12px; font-weight:600;"
+                      th:classappend="${s.estado.name() == 'COMPLETADA'} ? 'estado-ok' : 'estado-pendiente'"
+                      th:text="${s.estado}"></span>
+            </p>
+            <p th:if="${s.calificacion != null}">
+                Calificación: <span style="color:#FFD700;" th:text="${s.calificacion} + ' / 5 ★'"></span>
+                <span th:if="${s.comentario != null}" th:text="' — ' + ${s.comentario}" style="color:#ccc; font-size:13px;"></span>
+            </p>
+        </div>
+
+        <p th:if="${#lists.isEmpty(historial)}">Aún no tienes trabajos en tu historial.</p>
+
+        <a th:href="@{/solicitudes/mis-trabajos}" class="btn-hero-secundario" style="width:auto; display:inline-block; margin-top:15px;">Volver a mis trabajos</a>
+    </section>
+
+</body>
+</html>

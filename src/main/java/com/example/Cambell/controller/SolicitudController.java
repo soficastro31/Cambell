@@ -3,6 +3,7 @@ package com.example.Cambell.controller;
 import com.example.Cambell.model.CategoriaServicio;
 import com.example.Cambell.model.EstadoVerificacion;
 import com.example.Cambell.model.Solicitud;
+import com.example.Cambell.model.Usuario;
 import com.example.Cambell.security.CustomUserDetails;
 import com.example.Cambell.service.CoberturaTrabajadorService;
 import com.example.Cambell.service.LocalidadesBogota;
@@ -130,6 +131,31 @@ public class SolicitudController {
         model.addAttribute("noLeidos", mensajeService.contarNoLeidos(userDetails.getUsuario()));
         return "mis-trabajos";
     }
+
+    // HU-T13: historial de trabajos del trabajador (completados/cancelados, calificación e ingreso)
+    @GetMapping("/mis-trabajos/historial")
+    public String historialTrabajos(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        java.util.List<Solicitud> historial = solicitudService.historialPorTrabajador(userDetails.getUsuario());
+        model.addAttribute("historial", historial);
+        model.addAttribute("noLeidos", mensajeService.contarNoLeidos(userDetails.getUsuario()));
+        return "historial-trabajos";
+    }
+
+    // HU-C06: el cliente ve el perfil público del trabajador asignado a su solicitud
+    @GetMapping("/{id}/trabajador")
+    public String verPerfilTrabajador(@PathVariable Long id, Model model,
+                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Solicitud solicitud = solicitudService.buscar(id);
+        Usuario trabajador = solicitud.getTrabajador();
+        if (trabajador == null) {
+            return "redirect:/solicitudes/mis-solicitudes";
+        }
+        model.addAttribute("trabajador", trabajador);
+        model.addAttribute("trabajosRealizados", solicitudService.contarCompletadosPorTrabajador(trabajador));
+        model.addAttribute("noLeidos", mensajeService.contarNoLeidos(userDetails.getUsuario()));
+        return "perfil-trabajador";
+    }
+
 
     // Genera { id: { lat: x, lon: y } } en JSON válido para el revelado progresivo
     private String puntosExactos(java.util.List<Solicitud> trabajos) {

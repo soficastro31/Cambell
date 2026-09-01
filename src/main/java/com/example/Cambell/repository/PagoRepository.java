@@ -13,4 +13,5 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     List<Pago> findByClienteOrderByFechaPagoDesc(Usuario cliente);
     List<Pago> findByTrabajadorOrderByFechaPagoDesc(Usuario trabajador);
     List<Pago> findByEstado(Pago.EstadoPago estado);
+    List<Pago> findByEstadoAndTransferenciaCompletadaFalse(Pago.EstadoPago estado);
 }

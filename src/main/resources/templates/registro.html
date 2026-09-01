@@ -8,10 +8,15 @@
         .paso { display: none; }
         .paso.activo { display: block; }
         .error-campo { color: #ff4d4d; font-size: 12px; margin-top: 4px; display: block; }
-        .indicador-pasos { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
-        .punto-paso { width: 10px; height: 10px; border-radius: 50%; background: #444; }
-        .punto-paso.activo { background: var(--naranja); }
+        .indicador-pasos { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .paso-linea { color:#666; font-size:13px; }
+        .banner-error { color:#ff4d4d; background:#2a1414; border:1px solid #7a3838; padding:12px; border-radius:6px; margin-bottom:15px; font-size:14px; }
+        .banner-ok { color:#4dff88; background:#142a1a; border:1px solid #2a6b3a; padding:12px; border-radius:6px; margin-bottom:15px; font-size:14px; }
         .btn-paso { width: 48%; display: inline-block; }
+        .campo-usuario { display: none; }
+        .campo-usuario.visible { display: block; }
+        .campo-trabajador { display: none; }
+        .campo-trabajador.visible { display: block; }
     </style>
 </head>
 <body>
@@ -20,6 +25,7 @@
         <div class="logo">Cambell</div>
         <div class="nav-links">
             <a th:href="@{/}">Inicio</a>
+            <a th:href="@{/login}">Iniciar sesión</a>
         </div>
     </nav>
 
@@ -27,9 +33,11 @@
         <div class="auth-card" style="max-width:480px;">
             <h2>Crear cuenta en Cambell</h2>
 
+            <!-- Error de correo ya registrado u otro error general (HU-C01 Esc.2) -->
+            <div th:if="${errorGeneral}" class="banner-error" th:text="${errorGeneral}"></div>
+
             <div class="indicador-pasos">
-                <div class="punto-paso activo" id="punto1"></div>
-                <div class="punto-paso" id="punto2"></div>
+                <span class="paso-linea" id="etiquetaPaso">Paso 1 de 2 · Datos básicos</span>
             </div>
 
             <form th:action="@{/registro}" th:object="${usuario}" method="post" enctype="multipart/form-data" id="formRegistro">
@@ -39,17 +47,17 @@
                 <div class="paso activo" id="paso1">
                     <label>Nombre completo</label>
                     <input type="text" th:field="*{nombre}" required minlength="3" pattern="[A-Za-zÀ-ÿ\s]+" title="El nombre solo debe contener letras"/>
-                    <span class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></span>
+                    <small class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></small>
 
                     <label>Correo</label>
                     <input type="email" th:field="*{correo}" required/>
-                    <span class="error-campo" th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}"></span>
+                    <small class="error-campo" th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}"></small>
 
                     <label>Contraseña</label>
                     <input type="password" th:field="*{password}" required minlength="8"
                            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*"
                            title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número"/>
-                    <span class="error-campo" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                    <small class="error-campo" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></small>
                     <small style="color:#999; font-size:11px;">Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.</small>
 
                     <label>Rol</label>
@@ -57,45 +65,62 @@
                         <option value="">Selecciona un rol</option>
                         <option value="CLIENTE">Cliente</option>
                         <option value="TRABAJADOR">Trabajador</option>
+                        <option value="ALIADO_COMERCIAL">Aliado comercial</option>
                     </select>
-                    <span class="error-campo" th:if="${#fields.hasErrors('rol')}" th:errors="*{rol}"></span>
+                    <small class="error-campo" th:if="${#fields.hasErrors('rol')}" th:errors="*{rol}"></small>
 
-                    <button type="button" class="btn-hero-principal" style="margin-top:25px;" onclick="siguientePaso()">Siguiente</button>
+                    <button type="button" class="btn-hero-principal" style="margin-top:25px; width:100%;" onclick="siguientePaso()">Continuar</button>
                 </div>
 
-                <!-- PASO 2: Verificación (solo trabajador) -->
+                <!-- PASO 2: datos según el rol -->
                 <div class="paso" id="paso2">
-                    <p style="color:#FF6B00; font-weight:700; font-size:13px; margin-bottom:15px;">
-                        VERIFICACIÓN DE IDENTIDAD
-                    </p>
+                    <!-- Campos para cliente / aliado: teléfono y ubicación (HU-C01) -->
+                    <div class="campo-usuario" id="camposUsuario">
+                        <label>Teléfono</label>
+                        <input type="text" th:field="*{telefono}" id="telefono"
+                               pattern="[0-9]{7,15}" title="Solo números, entre 7 y 15 dígitos"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
+                        <small class="error-campo" th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}"></small>
 
-                    <label>Número de documento</label>
-                    <input type="text" th:field="*{numeroDocumento}" id="numeroDocumento"
-                           pattern="[0-9]{6,15}" title="Solo números, entre 6 y 15 dígitos"
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
-                    <span class="error-campo" th:if="${#fields.hasErrors('numeroDocumento')}" th:errors="*{numeroDocumento}"></span>
+                        <label>Localidad de Bogotá</label>
+                        <select th:field="*{localidad}" id="selectLocalidad">
+                            <option value="">Selecciona tu localidad</option>
+                            <option th:each="l : ${localidades}" th:value="${l}" th:text="${l}"></option>
+                        </select>
+                        <small class="error-campo" th:if="${#fields.hasErrors('localidad')}" th:errors="*{localidad}"></small>
 
-                    <label>Foto del documento (frente)</label>
-                    <input type="file" name="documentoFile" id="documentoFile" accept="image/*"/>
-                    <span class="error-campo" th:if="${errorDocumento}" th:text="${errorDocumento}"></span>
+                        <label>Barrio</label>
+                        <input type="text" th:field="*{barrio}" id="barrio" placeholder="Ej. Chapinero Central"/>
+                    </div>
 
-                    <label>Selfie de verificación</label>
-                    <input type="file" name="selfieFile" id="selfieFile" accept="image/*"/>
-                    <span class="error-campo" th:if="${errorSelfie}" th:text="${errorSelfie}"></span>
+                    <!-- Campos para trabajador: verificación de identidad -->
+                    <div class="campo-trabajador" id="camposTrabajador">
+                        <p style="color:#FF6B00; font-weight:700; font-size:13px; margin-bottom:15px;">
+                            VERIFICACIÓN DE IDENTIDAD
+                        </p>
+                        <label>Número de documento</label>
+                        <input type="text" th:field="*{numeroDocumento}" id="numeroDocumento"
+                               pattern="[0-9]{6,15}" title="Solo números, entre 6 y 15 dígitos"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
+                        <small class="error-campo" th:if="${#fields.hasErrors('numeroDocumento')}" th:errors="*{numeroDocumento}"></small>
 
-                    <p style="font-size:12px; color:#999; margin-top:10px;">
-                        Tu cuenta quedará en revisión hasta confirmar tu identidad.
-                    </p>
+                        <label>Foto del documento (frente)</label>
+                        <input type="file" name="documentoFile" id="documentoFile" accept="image/*"/>
+                        <small class="error-campo" th:if="${errorDocumento}" th:text="${errorDocumento}"></small>
+
+                        <label>Selfie de verificación</label>
+                        <input type="file" name="selfieFile" id="selfieFile" accept="image/*"/>
+                        <small class="error-campo" th:if="${errorSelfie}" th:text="${errorSelfie}"></small>
+
+                        <p style="font-size:12px; color:#999; margin-top:10px;">
+                            Tu cuenta quedará en revisión hasta confirmar tu identidad.
+                        </p>
+                    </div>
 
                     <div style="display:flex; justify-content:space-between; margin-top:25px;">
                         <button type="button" class="btn-hero-secundario btn-paso" onclick="pasoAnterior()">Atrás</button>
-                        <button type="submit" class="btn-hero-principal btn-paso">Registrarme</button>
+                        <button type="submit" class="btn-hero-principal btn-paso" id="btnRegistrar">Registrarme</button>
                     </div>
-                </div>
-
-                <!-- Solo se muestra si es CLIENTE (no necesita paso 2) -->
-                <div id="botonFinalCliente" style="display:none; margin-top:25px;">
-                    <button type="submit" class="btn-hero-principal">Registrarme</button>
                 </div>
             </form>
             <p class="auth-link">¿Ya tienes cuenta? <a th:href="@{/login}">Inicia sesión aquí</a></p>
@@ -114,29 +139,55 @@
             }
 
             const rol = document.getElementById('rolSelect').value;
+            if (!rol) { alert('Selecciona un rol para continuar.'); return; }
 
-            if (rol === 'CLIENTE') {
-                // El cliente no necesita el paso 2, mostramos botón directo
-                document.getElementById('paso1').classList.remove('activo');
-                document.getElementById('botonFinalCliente').style.display = 'block';
-                document.getElementById('numeroDocumento').removeAttribute('required');
-            } else {
-                document.getElementById('paso1').classList.remove('activo');
-                document.getElementById('paso2').classList.add('activo');
-                document.getElementById('punto1').classList.remove('activo');
-                document.getElementById('punto2').classList.add('activo');
-                document.getElementById('numeroDocumento').setAttribute('required', 'true');
-                document.getElementById('documentoFile').setAttribute('required', 'true');
-                document.getElementById('selfieFile').setAttribute('required', 'true');
-            }
+            // Mostrar los campos correspondientes al rol en el paso 2
+            const esTrabajador = (rol === 'TRABAJADOR');
+            document.getElementById('camposUsuario').classList.toggle('visible', !esTrabajador);
+            document.getElementById('camposTrabajador').classList.toggle('visible', esTrabajador);
+
+            // Requerir solo los campos del rol elegido
+            setRequeridos('camposUsuario', !esTrabajador);
+            setRequeridos('camposTrabajador', esTrabajador);
+
+            document.getElementById('paso1').classList.remove('activo');
+            document.getElementById('paso2').classList.add('activo');
+            document.getElementById('etiquetaPaso').textContent = 'Paso 2 de 2 · ' +
+                (esTrabajador ? 'Verificación de identidad' : 'Tus datos y ubicación');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setRequeridos(contenedorId, activo) {
+            const cont = document.getElementById(contenedorId);
+            const campos = cont.querySelectorAll('input, select');
+            campos.forEach(c => {
+                if (c.type === 'file') return;
+                c.disabled = !activo;
+                if (activo) {
+                    c.setAttribute('required', 'true');
+                } else {
+                    c.removeAttribute('required');
+                }
+            });
         }
 
         function pasoAnterior() {
             document.getElementById('paso2').classList.remove('activo');
             document.getElementById('paso1').classList.add('activo');
-            document.getElementById('punto2').classList.remove('activo');
-            document.getElementById('punto1').classList.add('activo');
+            document.getElementById('etiquetaPaso').textContent = 'Paso 1 de 2 · Datos básicos';
+            setRequeridos('camposUsuario', false);
+            setRequeridos('camposTrabajador', false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        // Si hubo un error del servidor y el rol ya fue seleccionado (th:field lo re-restaura),
+        // volvemos directo al paso 2 con los datos que el usuario había ingresado.
+        window.addEventListener('DOMContentLoaded', function () {
+            const rolSel = document.getElementById('rolSelect');
+            if (rolSel && rolSel.value) {
+                siguientePaso();
+            }
+        });
     </script>
 
 </body>

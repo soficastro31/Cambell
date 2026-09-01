@@ -45,7 +45,8 @@ public DaoAuthenticationProvider authenticationProvider() {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/registro", "/login", "/css/**", "/images/**", "/api/**").permitAll()
+                .requestMatchers("/", "/registro", "/login", "/css/**", "/images/**", "/api/**",
+                        "/recuperar-password", "/restablecer-password").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
                 .anyRequest().authenticated()
             )

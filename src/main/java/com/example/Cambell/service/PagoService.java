@@ -75,7 +75,10 @@ public class PagoService {
         pago.setMontoTotal(monto);
 
         if (monto == null || monto <= 0 || metodo == null) {
-            // HU-S13: transacción fallida (monto inválido o sin método de pago)
+            // HU-S14: transacción fallida (monto inválido o sin método de pago)
+            pago.setMontoTotal(monto != null ? monto : 0.0);
+            pago.setComision(0.0);
+            pago.setNetoTrabajador(0.0);
             pago.setEstado(Pago.EstadoPago.FALLIDO);
             return pagoRepository.save(pago);
         }
@@ -123,5 +126,36 @@ public class PagoService {
             }
         }
         return Math.round(total * 100.0) / 100.0;
+    }
+
+    // HU-T14: pagos completados del trabajador dentro de un rango de fechas (opcional)
+    public List<Pago> pagosTrabajadorEnRango(Usuario trabajador, LocalDateTime desde, LocalDateTime hasta) {
+        List<Pago> pagos = pagoRepository.findByTrabajadorOrderByFechaPagoDesc(trabajador);
+        return pagos.stream()
+                .filter(p -> p.getEstado() == Pago.EstadoPago.COMPLETADO && p.getFechaPago() != null)
+                .filter(p -> (desde == null || !p.getFechaPago().isBefore(desde))
+                        && (hasta == null || !p.getFechaPago().isAfter(hasta)))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<Pago> pagosCompletados() {
+        return pagoRepository.findByEstado(Pago.EstadoPago.COMPLETADO);
+    }
+
+    // HU-S13/S65: transferir el neto al medio de cobro del trabajador una vez
+    // procesado el pago y retenida la comisión. Se acredita el neto y se marca
+    // la transacción como transferida.
+    public void transferirNetoTrabajadores() {
+        List<Pago> pendientes = pagoRepository.findByEstadoAndTransferenciaCompletadaFalse(Pago.EstadoPago.COMPLETADO);
+        for (Pago pago : pendientes) {
+            if (pago.getNetoTrabajador() == null || pago.getNetoTrabajador() <= 0) {
+                pago.setEstadoTransferencia(Pago.EstadoTransferencia.FALLIDO);
+                continue;
+            }
+            pago.setTransferenciaCompletada(true);
+            pago.setEstadoTransferencia(Pago.EstadoTransferencia.TRANSFERIDO);
+            pago.setFechaTransferencia(LocalDateTime.now());
+            pagoRepository.save(pago);
+        }
     }
 }

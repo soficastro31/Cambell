@@ -3,5 +3,6 @@ package com.example.Cambell.model;
 public enum Rol {
     TRABAJADOR,
     CLIENTE,
-    ADMINISTRADOR
+    ADMINISTRADOR,
+    ALIADO_COMERCIAL
 }

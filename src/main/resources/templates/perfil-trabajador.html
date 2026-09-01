@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil del trabajador - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .fila { margin: 10px 0; }
+        .fila label { font-weight:600; color:#ccc; display:block; font-size:12px; }
+        .fila span { font-size:16px; }
+        .estrella { color:#FFD700; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <a href="javascript:history.back()" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section class="auth-container">
+        <div class="auth-card">
+            <h2>Perfil del trabajador</h2>
+
+            <div class="fila">
+                <label>Nombre</label>
+                <span th:text="${trabajador.nombre}"></span>
+            </div>
+            <div class="fila">
+                <label>Calificación promedio</label>
+                <span>
+                    <span th:if="${trabajador.calificacionPromedio != null and trabajador.calificacionPromedio > 0}"
+                          class="estrella"
+                          th:text="${#numbers.formatDecimal(trabajador.calificacionPromedio, 1, 1)} + ' ★'"></span>
+                    <span th:if="${trabajador.calificacionPromedio == null or trabajador.calificacionPromedio <= 0}">Sin calificaciones aún</span>
+                </span>
+            </div>
+            <div class="fila">
+                <label>Trabajos completados</label>
+                <span th:text="${trabajosRealizados} + ' servicios'"></span>
+            </div>
+
+            <div style="margin-top:20px;">
+                <a th:href="@{/solicitudes/mis-solicitudes}" class="btn-hero-secundario" style="width:auto;">Volver a mis solicitudes</a>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

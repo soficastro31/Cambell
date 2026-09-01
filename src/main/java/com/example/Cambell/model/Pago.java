@@ -47,8 +47,23 @@ public class Pago {
     @Column
     private LocalDateTime fechaPago;
 
+    // HU-S13/S65: transferencia del neto al medio de cobro del trabajador
+    @Column(nullable = false)
+    private boolean transferenciaCompletada = false;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private EstadoTransferencia estadoTransferencia = EstadoTransferencia.PENDIENTE;
+
+    @Column
+    private LocalDateTime fechaTransferencia;
+
     public enum EstadoPago {
         PENDIENTE, COMPLETADO, FALLIDO
+    }
+
+    public enum EstadoTransferencia {
+        PENDIENTE, TRANSFERIDO, FALLIDO
     }
 
     public Long getId() { return id; }
@@ -80,4 +95,13 @@ public class Pago {
 
     public LocalDateTime getFechaPago() { return fechaPago; }
     public void setFechaPago(LocalDateTime fechaPago) { this.fechaPago = fechaPago; }
+
+    public boolean isTransferenciaCompletada() { return transferenciaCompletada; }
+    public void setTransferenciaCompletada(boolean transferenciaCompletada) { this.transferenciaCompletada = transferenciaCompletada; }
+
+    public EstadoTransferencia getEstadoTransferencia() { return estadoTransferencia; }
+    public void setEstadoTransferencia(EstadoTransferencia estadoTransferencia) { this.estadoTransferencia = estadoTransferencia; }
+
+    public LocalDateTime getFechaTransferencia() { return fechaTransferencia; }
+    public void setFechaTransferencia(LocalDateTime fechaTransferencia) { this.fechaTransferencia = fechaTransferencia; }
 }

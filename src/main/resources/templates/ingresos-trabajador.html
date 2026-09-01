@@ -25,6 +25,18 @@
             <p style="margin:8px 0 0; font-size:36px; font-weight:800; color:#FF6B00;" th:text="'$ ' + ${totalIngresos}"></p>
         </div>
 
+        <!-- HU-T14: exportar el reporte de ingresos del periodo -->
+        <form th:action="@{/pagos/ingresos/exportar}" method="get" style="background:#1a1a24; padding:16px; border-radius:8px; margin-bottom:20px; max-width:480px;">
+            <strong style="color:#FFB36B;">Exportar reporte de ingresos</strong>
+            <p style="margin:6px 0 10px; font-size:13px; color:#999;">Selecciona un rango de fechas (opcional) y descarga el detalle en formato compatible con Excel.</p>
+            <label>Desde</label>
+            <input type="date" name="desde" style="margin-bottom:10px;"/>
+            <label>Hasta</label>
+            <input type="date" name="hasta" style="margin-bottom:10px;"/>
+            <br/>
+            <button type="submit" class="btn-hero-secundario" style="width:auto;">Descargar reporte (CSV)</button>
+        </form>
+
         <div th:each="p : ${pagos}" style="background:#1e1e1e; padding:16px 20px; border-radius:8px; margin-bottom:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>

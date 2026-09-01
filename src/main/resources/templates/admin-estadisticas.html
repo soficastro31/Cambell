@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Estadísticas - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .admin-nav a { color:#ccc; text-decoration:none; margin-left:18px; font-weight:500; }
+        .admin-nav a.activo { color:#FF6B00; }
+        .grid-cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:16px; margin-top:20px; }
+        .card-stat { background:#1e1e1e; padding:20px; border-radius:8px; }
+        .card-stat .num { font-size:28px; font-weight:800; color:#FF6B00; margin-top:6px; }
+        .card-stat .lab { font-size:13px; color:#999; }
+    </style>
+</head>
+<body>
+    <nav class="navbar admin-nav">
+        <div class="logo">Cambell · Admin</div>
+        <div>
+            <a th:classappend="${seccion == 'verificaciones'} ? 'activo'" th:href="@{/admin/verificaciones}">Verificaciones</a>
+            <a th:classappend="${seccion == 'usuarios'} ? 'activo'" th:href="@{/admin/usuarios}">Usuarios</a>
+            <a th:classappend="${seccion == 'reportes'} ? 'activo'" th:href="@{/admin/reportes}">Reportes</a>
+            <a th:classappend="${seccion == 'anuncios'} ? 'activo'" th:href="@{/admin/anuncios}">Anuncios</a>
+            <a th:classappend="${seccion == 'estadisticas'} ? 'activo'" th:href="@{/admin/estadisticas}">Estadísticas</a>
+            <form th:action="@{/logout}" method="post" style="display:inline; margin-left:18px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px;">
+        <h2 style="margin-bottom:10px;">Reportes y estadísticas de operación </h2>
+        <p style="color:#999; font-size:13px;">Indicadores generales de la plataforma.</p>
+
+        <div class="grid-cards">
+            <div class="card-stat"><div class="lab">Usuarios totales</div><div class="num" th:text="${stats.totalUsuarios}"></div></div>
+            <div class="card-stat"><div class="lab">Clientes</div><div class="num" th:text="${stats.clientes}"></div></div>
+            <div class="card-stat"><div class="lab">Trabajadores</div><div class="num" th:text="${stats.trabajadores}"></div></div>
+            <div class="card-stat"><div class="lab">Aliados comerciales</div><div class="num" th:text="${stats.aliados}"></div></div>
+            <div class="card-stat"><div class="lab">Solicitudes totales</div><div class="num" th:text="${stats.totalSolicitudes}"></div></div>
+            <div class="card-stat"><div class="lab">Solicitudes pendientes</div><div class="num" th:text="${stats.solicitudes_pendiente}"></div></div>
+            <div class="card-stat"><div class="lab">Solicitudes aceptadas</div><div class="num" th:text="${stats.solicitudes_aceptada}"></div></div>
+            <div class="card-stat"><div class="lab">Solicitudes completadas</div><div class="num" th:text="${stats.solicitudes_completada}"></div></div>
+            <div class="card-stat"><div class="lab">Solicitudes canceladas</div><div class="num" th:text="${stats.solicitudes_cancelada}"></div></div>
+            <div class="card-stat"><div class="lab">Pagos completados</div><div class="num" th:text="${stats.totalPagosCompletados}"></div></div>
+            <div class="card-stat"><div class="lab">Ingresos brutos</div><div class="num" th:text="'$ ' + ${stats.ingresosBrutos}"></div></div>
+            <div class="card-stat"><div class="lab">Comisión (3%) acumulada</div><div class="num" th:text="'$ ' + ${stats.comisionTotal}"></div></div>
+            <div class="card-stat"><div class="lab">Anuncios pendientes</div><div class="num" th:text="${stats.anunciosPendientes}"></div></div>
+            <div class="card-stat"><div class="lab">Reportes en revisión</div><div class="num" th:text="${stats.reportesEnRevision}"></div></div>
+        </div>
+    </section>
+</body>
+</html>

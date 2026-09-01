@@ -20,11 +20,16 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
         String rol = userDetails.getUsuario().getRol().name();
 
         if (rol.equals("TRABAJADOR")) {
-            response.sendRedirect("/solicitudes/disponibles");
+            // HU-T05: el trabajador que aún no está aprobado debe completar/reintentar su verificación
+            boolean aprobado = userDetails.getUsuario().getEstadoVerificacion() != null
+                    && userDetails.getUsuario().getEstadoVerificacion().name().equals("APROBADO");
+            response.sendRedirect(aprobado ? "/solicitudes/disponibles" : "/verificacion/reintentar");
         } else if (rol.equals("CLIENTE")) {
             response.sendRedirect("/solicitudes/nueva");
         } else if (rol.equals("ADMINISTRADOR")) {
             response.sendRedirect("/admin/verificaciones");
+        } else if (rol.equals("ALIADO_COMERCIAL")) {
+            response.sendRedirect("/anuncios/mios");
         } else {
             response.sendRedirect("/");
         }

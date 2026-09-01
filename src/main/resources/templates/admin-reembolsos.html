@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reembolsos - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .admin-nav a { color:#ccc; text-decoration:none; margin-left:18px; font-weight:500; }
+        .admin-nav a.activo { color:#FF6B00; }
+    </style>
+</head>
+<body>
+    <nav class="navbar admin-nav">
+        <div class="logo">Cambell · Admin</div>
+        <div>
+            <a th:classappend="${seccion == 'verificaciones'} ? 'activo'" th:href="@{/admin/verificaciones}">Verificaciones</a>
+            <a th:classappend="${seccion == 'usuarios'} ? 'activo'" th:href="@{/admin/usuarios}">Usuarios</a>
+            <a th:classappend="${seccion == 'reportes'} ? 'activo'" th:href="@{/admin/reportes}">Reportes</a>
+            <a th:classappend="${seccion == 'reembolsos'} ? 'activo'" th:href="@{/admin/reembolsos}">Reembolsos</a>
+            <a th:classappend="${seccion == 'anuncios'} ? 'activo'" th:href="@{/admin/anuncios}">Anuncios</a>
+            <a th:classappend="${seccion == 'estadisticas'} ? 'activo'" th:href="@{/admin/estadisticas}">Estadísticas</a>
+            <form th:action="@{/logout}" method="post" style="display:inline; margin-left:18px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px;">
+        <h2 style="margin-bottom:25px;">Reembolsos</h2>
+
+        <p th:if="${ok}" style="background:#1f2e1f; color:#7CE38B; padding:12px; border-radius:8px; margin-bottom:15px;" th:text="${ok}"></p>
+        <p th:if="${error}" style="background:#2a1414; color:#ff6b6b; padding:12px; border-radius:8px; margin-bottom:15px;" th:text="${error}"></p>
+
+        <h3 style="color:#FFB36B;">Disputas de pago justificadas</h3>
+        <div th:each="p : ${pagos}" style="background:#1e1e1e; padding:20px; border-radius:8px; margin-bottom:15px;">
+            <p><strong>Pago #<span th:text="${p.id}"></span></strong> · <span th:text="${p.solicitud.descripcion}"></span></p>
+            <p>Cliente: <span th:text="${p.cliente.nombre}"></span> · Trabajador: <span th:text="${p.trabajador.nombre}"></span></p>
+            <p th:text="'Monto: $' + ${p.montoTotal} + ' · Comisión: $' + ${p.comision} + ' · Neto trabajador: $' + ${p.netoTrabajador}"></p>
+            <p th:if="${p.fechaPago != null}" th:text="'Fecha de pago: ' + ${#temporals.format(p.fechaPago, 'dd/MM/yyyy HH:mm')}"></p>
+
+            <div th:if="${reembolsados.contains(p.id)}" style="color:#7CE38B; font-weight:600; margin-top:10px;">
+                ✓ Ya reembolsado
+            </div>
+            <form th:if="${!reembolsados.contains(p.id)}" th:action="@{/admin/reembolsos/{id}/iniciar(id=${p.id})}"
+                  method="post" style="margin-top:10px; border-top:1px solid #333; padding-top:12px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <label>Motivo del reembolso (opcional)</label>
+                <input type="text" name="motivo" placeholder="Ej. servicio no realizado" style="width:100%; max-width:420px; margin:6px 0 10px;"/>
+                <br/>
+                <button type="submit" class="btn-hero-principal" style="width:auto;"
+                        onclick="return confirm('¿Iniciar el reembolso de este pago al cliente?');">Iniciar reembolso</button>
+            </form>
+        </div>
+
+        <p th:if="${#lists.isEmpty(pagos)}">No hay pagos completados aún.</p>
+
+        <h3 style="color:#FFB36B; margin-top:35px;">Reembolsos realizados</h3>
+        <div th:each="r : ${reembolsos}" style="background:#1e1e1e; padding:16px 20px; border-radius:8px; margin-bottom:10px;">
+            <p style="margin:0; font-weight:600;" th:text="'Pago #' + ${r.pago.id} + ' · $' + ${r.pago.montoTotal} + ' · ' + ${r.motivo}"></p>
+            <p style="margin:4px 0 0; color:#999;" th:text="'Reembolsado a ' + ${r.pago.cliente.nombre} + ' el ' + ${#temporals.format(r.fecha, 'dd/MM/yyyy HH:mm')}"></p>
+        </div>
+        <p th:if="${#lists.isEmpty(reembolsos)}">Aún no hay reembolsos realizados.</p>
+    </section>
+</body>
+</html>

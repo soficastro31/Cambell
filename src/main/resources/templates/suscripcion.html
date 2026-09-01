@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi suscripción - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/solicitudes/mis-trabajos}" class="nav-volver" title="Volver">←</a>
+            <div class="logo">Cambell</div>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/solicitudes/mis-trabajos}" class="btn-nav">Mis trabajos</a>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px; max-width: 680px; margin: 0 auto;">
+        <h2>Mi suscripción</h2>
+
+        <p th:if="${exito}" style="background:#1f2e1f; color:#7CE38B; padding:12px; border-radius:8px; margin-bottom:15px;"
+           th:text="${exito}"></p>
+        <p th:if="${error}" style="background:#2a1414; color:#ff6b6b; padding:12px; border-radius:8px; margin-bottom:15px;"
+           th:text="${error}"></p>
+
+        <!-- Sin suscripción: ofrecer contratar (HU-T15) -->
+        <div th:if="${suscripcion == null}" style="background:#1e1e1e; padding:25px; border-radius:8px; text-align:center;">
+            <h3 style="color:#FFB36B; margin:0;">Plan Premium</h3>
+            <p style="color:#999; font-size:14px;">Mayor visibilidad en las búsquedas y prioridad para recibir solicitudes compatibles.</p>
+            <p style="font-size:26px; font-weight:800; color:#fff; margin:12px 0;">$20.000<span style="font-size:14px; color:#999;"> /mes</span></p>
+            <form th:action="@{/suscripcion/contratar}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn-hero-principal">Contratar plan premium</button>
+            </form>
+        </div>
+
+        <!-- Suscripción activa: beneficios y vigencia (HU-T17) -->
+        <div th:if="${suscripcion != null}" style="background:#1e1e1e; padding:25px; border-radius:8px;">
+            <p style="font-size:22px; font-weight:800; color:#7CE38B; margin:0;">Plan Premium activo</p>
+            <p style="color:#999;" th:text="'Vigente desde: ' + ${#temporals.format(suscripcion.fechaInicio, 'dd/MM/yyyy')}"></p>
+            <p style="color:#999;" th:text="'Vence el: ' + ${#temporals.format(suscripcion.fechaVencimiento, 'dd/MM/yyyy')}"
+               th:classappend="${suscripcion.fechaVencimiento.isBefore(#temporals.createNow())} ? 'color:#ff6b6b' : ''"></p>
+            <p style="color:#999;" th:text="${suscripcion.renovacionAutomatica ? 'Renovación automática: activada' : 'Renovación automática: cancelada'}"></p>
+
+            <ul style="color:#ccc; line-height:1.8;">
+                <li>Mayor visibilidad en los resultados de búsqueda.</li>
+                <li>Prioridad en la asignación de solicitudes compatibles.</li>
+                <li>Insignia de aliado de confianza en tu perfil.</li>
+            </ul>
+
+            <div th:if="${suscripcion.fechaVencimiento.isAfter(#temporals.createNow())}">
+                <form th:action="@{/suscripcion/cancelar}" method="post" style="margin-top:15px; border-top:1px solid #333; padding-top:15px;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn-hero-secundario" style="width:auto; background:#3a1e1e; border-color:#7a3838;"
+                            onclick="return confirm('¿Cancelar la renovación automática? Conservarás los beneficios hasta el fin del periodo pagado.');">
+                        Cancelar renovación automática
+                    </button>
+                </form>
+            </div>
+            <p th:if="${suscripcion.fechaVencimiento.isBefore(#temporals.createNow())}"
+               style="color:#ff6b6b; font-weight:600; margin-top:15px;">Tu suscripción está vencida. Contrata nuevamente para renovarla.</p>
+        </div>
+    </section>
+
+</body>
+</html>

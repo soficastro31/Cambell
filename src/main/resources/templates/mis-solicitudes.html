@@ -46,7 +46,11 @@
             <p><strong th:text="${s.descripcion}"></strong></p>
             <p>Zona: <span th:text="${s.zona}"></span></p>
             <p>Estado: <span th:text="${s.estado}"></span></p>
-            <p th:if="${s.trabajador != null}">Trabajador asignado: <span th:text="${s.trabajador.nombre}"></span></p>
+            <p th:if="${s.trabajador != null}">Trabajador asignado:
+                <a th:href="@{/solicitudes/{id}/trabajador(id=${s.id})}" style="color:#FFB36B; text-decoration:none;">
+                    <span th:text="${s.trabajador.nombre}"></span> (ver perfil)
+                </a>
+            </p>
 
             <!-- Código de finalización: se muestra al cliente una vez un trabajador acepta el trabajo -->
             <div th:if="${s.estado.name() == 'ACEPTADA' and s.codigoFinalizacion != null}"
@@ -101,6 +105,9 @@
                    style="width:auto; display:inline-block; text-decoration:none;">Pagar servicio</a>
                 <span th:if="${s.estado.name() == 'COMPLETADA' and pagosPorSolicitud.get(s.id) != null and pagosPorSolicitud.get(s.id)}"
                       style="color:#66bb6a; align-self:center;">✓ Servicio pagado</span>
+                <!-- HU-C12: reportar al trabajador asignado -->
+                <a th:if="${s.trabajador != null}" th:href="@{/solicitudes/{id}/reportar(id=${s.id})}"
+                   style="width:auto; display:inline-block; text-decoration:none; align-self:center; color:#ff6b6b; font-size:13px;">Reportar trabajador</a>
             </div>
         </div>
 

@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -76,5 +80,18 @@ public class ClienteController {
         }
         redirectAttributes.addFlashAttribute("exito", "Contraseña actualizada correctamente.");
         return "redirect:/cliente/perfil";
+    }
+
+    // HU-U05: el usuario desactiva su propia cuenta, cierra la sesión y vuelve al login
+    @PostMapping("/desactivar")
+    public String desactivarCuenta(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                   HttpServletRequest request) {
+        usuarioService.desactivarCuenta(userDetails.getUsuario().getId());
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        new SecurityContextLogoutHandler().logout(request, null, null);
+        return "redirect:/login";
     }
 }

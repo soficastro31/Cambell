@@ -51,6 +51,33 @@ public class Usuario {
     @Column(name = "ruta_selfie")
     private String rutaSelfie;
 
+    // Datos del cliente (HU-C01): teléfono obligatorio y ubicación de Bogotá
+    @Pattern(regexp = "^[0-9]{7,15}$", message = "El teléfono debe tener solo números (7 a 15 dígitos)")
+    @Column(name = "telefono")
+    private String telefono;
+
+    // Vigencia del documento de identidad (HU-S03): permite notificar a los
+    // trabajadores cuando su documento está próximo a vencer o ya venció.
+    @Column
+    private java.time.LocalDate fechaVencimientoDocumento;
+
+    // Resultado de la consulta de antecedentes a la API externa (HU-S11/S63)
+    @Column(length = 2000)
+    private String antecedentes;
+
+    @Column
+    private java.time.LocalDateTime fechaConsultaAntecedentes;
+
+    @Column
+    private String localidad;
+
+    @Column
+    private String barrio;
+
+    // Cuenta bloqueada por el administrador (HU-A04/A06) o desactivada por el usuario (HU-U05)
+    @Column(nullable = false)
+    private boolean bloqueado = false;
+
     // Getters y setters (igual que antes)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -84,4 +111,25 @@ public void setCalificacionPromedio(Double calificacionPromedio) { this.califica
 
 public Integer getTotalCalificaciones() { return totalCalificaciones; }
 public void setTotalCalificaciones(Integer totalCalificaciones) { this.totalCalificaciones = totalCalificaciones; }
+
+public boolean isBloqueado() { return bloqueado; }
+public void setBloqueado(boolean bloqueado) { this.bloqueado = bloqueado; }
+public String getTelefono() { return telefono; }
+
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+
+    public java.time.LocalDate getFechaVencimientoDocumento() { return fechaVencimientoDocumento; }
+    public void setFechaVencimientoDocumento(java.time.LocalDate fechaVencimientoDocumento) { this.fechaVencimientoDocumento = fechaVencimientoDocumento; }
+
+    public String getAntecedentes() { return antecedentes; }
+    public void setAntecedentes(String antecedentes) { this.antecedentes = antecedentes; }
+
+    public java.time.LocalDateTime getFechaConsultaAntecedentes() { return fechaConsultaAntecedentes; }
+    public void setFechaConsultaAntecedentes(java.time.LocalDateTime fechaConsultaAntecedentes) { this.fechaConsultaAntecedentes = fechaConsultaAntecedentes; }
+
+public String getLocalidad() { return localidad; }
+public void setLocalidad(String localidad) { this.localidad = localidad; }
+
+public String getBarrio() { return barrio; }
+public void setBarrio(String barrio) { this.barrio = barrio; }
 }

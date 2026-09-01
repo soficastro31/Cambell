@@ -64,6 +64,17 @@ public class Solicitud {
     @Column
     private String codigoFinalizacion;
 
+    // Fechas usadas por los schedulers (HU-S02/S07/S09)
+    @Column
+    private java.time.LocalDateTime fechaCreacion;
+
+    @Column
+    private java.time.LocalDateTime fechaFinalizacion;
+
+    // Scheduler HU-S02/S54: controla la re-notificación periódica a trabajadores
+    @Column
+    private java.time.LocalDateTime fechaUltimaReasignacion;
+
     // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -109,7 +120,16 @@ public class Solicitud {
 
     public String getRutaEvidencia() { return rutaEvidencia; }
     public void setRutaEvidencia(String rutaEvidencia) { this.rutaEvidencia = rutaEvidencia; }
+public String getCodigoFinalizacion() { return codigoFinalizacion; }
 
-    public String getCodigoFinalizacion() { return codigoFinalizacion; }
     public void setCodigoFinalizacion(String codigoFinalizacion) { this.codigoFinalizacion = codigoFinalizacion; }
+
+    public java.time.LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(java.time.LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    public java.time.LocalDateTime getFechaFinalizacion() { return fechaFinalizacion; }
+    public void setFechaFinalizacion(java.time.LocalDateTime fechaFinalizacion) { this.fechaFinalizacion = fechaFinalizacion; }
+
+    public java.time.LocalDateTime getFechaUltimaReasignacion() { return fechaUltimaReasignacion; }
+    public void setFechaUltimaReasignacion(java.time.LocalDateTime fechaUltimaReasignacion) { this.fechaUltimaReasignacion = fechaUltimaReasignacion; }
 }

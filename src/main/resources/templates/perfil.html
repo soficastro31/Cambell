@@ -57,6 +57,16 @@
                 <a th:href="@{/cliente/editar}" class="btn-hero-principal" style="width:auto;">Editar datos</a>
                 <a th:href="@{/cliente/cambiar-password}" class="btn-hero-secundario" style="width:auto;">Cambiar contraseña</a>
             </div>
+
+            <!-- HU-U05: desactivar la propia cuenta -->
+            <form th:action="@{/cliente/desactivar}" method="post" style="margin-top:25px; border-top:1px solid #333; padding-top:20px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit"
+                        onclick="return confirm('¿Seguro que quieres desactivar tu cuenta? Ya no aparecerás en búsquedas ni se te asignarán servicios. Esta acción es definitiva.');"
+                        style="background:#3a1e1e; color:#ff6b6b; border:1px solid #7a3838; padding:12px 18px; border-radius:6px; font-weight:600; cursor:pointer;">
+                    Desactivar mi cuenta
+                </button>
+            </form>
         </div>
     </section>
 

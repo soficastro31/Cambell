@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de usuarios - Cambell</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <style>
+        .admin-nav a { color:#ccc; text-decoration:none; margin-left:18px; font-weight:500; }
+        .admin-nav a.activo { color:#FF6B00; }
+        .tabla-usuarios { width:100%; border-collapse:collapse; margin-top:10px; }
+        .tabla-usuarios th, .tabla-usuarios td { border:1px solid #333; padding:10px; text-align:left; }
+        .tabla-usuarios th { background:#1e1e1e; }
+        .badge {
+            display:inline-block; padding:2px 10px; border-radius:10px; font-size:12px; font-weight:700;
+        }
+        .badge-bloq { background:#401414; color:#ff6b6b; }
+        .badge-activo { background:#14401f; color:#5ae66a; }
+        .badge-trab { background:#1e1e4a; color:#8f8fff; }
+    </style>
+</head>
+<body>
+    <nav class="navbar admin-nav">
+        <div class="logo">Cambell · Admin</div>
+        <div>
+            <a th:classappend="${seccion == 'verificaciones'} ? 'activo'" th:href="@{/admin/verificaciones}">Verificaciones</a>
+            <a th:classappend="${seccion == 'usuarios'} ? 'activo'" th:href="@{/admin/usuarios}">Usuarios</a>
+            <a th:classappend="${seccion == 'reportes'} ? 'activo'" th:href="@{/admin/reportes}">Reportes</a>
+            <a th:classappend="${seccion == 'anuncios'} ? 'activo'" th:href="@{/admin/anuncios}">Anuncios</a>
+            <a th:classappend="${seccion == 'estadisticas'} ? 'activo'" th:href="@{/admin/estadisticas}">Estadísticas</a>
+            <form th:action="@{/logout}" method="post" style="display:inline; margin-left:18px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-weight:500;">Cerrar sesión</button>
+            </form>
+        </div>
+    </nav>
+
+    <section style="padding: 40px 60px;">
+        <h2 style="margin-bottom:25px;">Gestión de usuarios</h2>
+        <p style="color:#999; font-size:13px;">Consulta, bloquea o reactiva cuentas (HU-A04).</p>
+
+        <h3 style="margin:30px 0 10px;">Clientes</h3>
+        <table class="tabla-usuarios" th:if="${!clientes.isEmpty()}">
+            <tr><th>Nombre</th><th>Correo</th><th>Estado</th><th>Acción</th></tr>
+            <tr th:each="u : ${clientes}">
+                <td th:text="${u.nombre}"></td>
+                <td th:text="${u.correo}"></td>
+                <td>
+                    <span th:if="${u.bloqueado}" class="badge badge-bloq">Bloqueado</span>
+                    <span th:unless="${u.bloqueado}" class="badge badge-activo">Activo</span>
+                </td>
+                <td>
+                    <a th:href="@{/admin/historial/{id}(id=${u.id})}" style="color:#8f8fff;">Historial</a>
+                    <form th:if="${!u.bloqueado}" th:action="@{/admin/usuarios/{id}/bloquear(id=${u.id})}" method="post" style="display:inline; margin-left:10px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-hero-secundario" style="width:auto; background:#401414; border-color:#7a3838;">Bloquear</button>
+                    </form>
+                    <form th:if="${u.bloqueado}" th:action="@{/admin/usuarios/{id}/reactivar(id=${u.id})}" method="post" style="display:inline; margin-left:10px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-hero-secundario" style="width:auto;">Reactivar</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <p th:if="${clientes.isEmpty()}">No hay clientes.</p>
+
+        <h3 style="margin:30px 0 10px;">Trabajadores</h3>
+        <table class="tabla-usuarios" th:if="${!trabajadores.isEmpty()}">
+            <tr><th>Nombre</th><th>Correo</th><th>Verificación</th><th>Estado</th><th>Acción</th></tr>
+            <tr th:each="u : ${trabajadores}">
+                <td th:text="${u.nombre}"></td>
+                <td th:text="${u.correo}"></td>
+                <td>
+                    <span th:switch="${u.estadoVerificacion.name()}" class="badge">
+                        <span th:case="'APROBADO'" style="background:#14401f; color:#5ae66a;">Aprobado</span>
+                        <span th:case="'PENDIENTE'" style="background:#4a4a16; color:#e6d35a;">Pendiente</span>
+                        <span th:case="'RECHAZADO'" style="background:#401414; color:#ff6b6b;">Rechazado</span>
+                    </span>
+                </td>
+                <td>
+                    <span th:if="${u.bloqueado}" class="badge badge-bloq">Bloqueado</span>
+                    <span th:unless="${u.bloqueado}" class="badge badge-activo">Activo</span>
+                </td>
+                <td>
+                    <a th:href="@{/admin/historial/{id}(id=${u.id})}" style="color:#8f8fff;">Historial</a>
+                    <form th:if="${!u.bloqueado}" th:action="@{/admin/usuarios/{id}/bloquear(id=${u.id})}" method="post" style="display:inline; margin-left:10px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-hero-secundario" style="width:auto; background:#401414; border-color:#7a3838;">Bloquear</button>
+                    </form>
+                    <form th:if="${u.bloqueado}" th:action="@{/admin/usuarios/{id}/reactivar(id=${u.id})}" method="post" style="display:inline; margin-left:10px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-hero-secundario" style="width:auto;">Reactivar</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <p th:if="${trabajadores.isEmpty()}">No hay trabajadores.</p>
+
+        <h3 style="margin:30px 0 10px;">Aliados comerciales</h3>
+        <table class="tabla-usuarios" th:if="${!aliados.isEmpty()}">
+            <tr><th>Nombre</th><th>Correo</th><th>Estado</th><th>Acción</th></tr>
+            <tr th:each="u : ${aliados}">
+                <td th:text="${u.nombre}"></td>
+                <td th:text="${u.correo}"></td>
+                <td>
+                    <span th:if="${u.bloqueado}" class="badge badge-bloq">Bloqueado</span>
+                    <span th:unless="${u.bloqueado}" class="badge badge-activo">Activo</span>
+                </td>
+                <td>
+                    <a th:href="@{/admin/historial/{id}(id=${u.id})}" style="color:#8f8fff;">Historial</a>
+                    <form th:if="${!u.bloqueado}" th:action="@{/admin/usuarios/{id}/bloquear(id=${u.id})}" method="post" style="display:inline; margin-left:10px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-hero-secundario" style="width:auto; background:#401414; border-color:#7a3838;">Bloquear</button>
+                    </form>
+                    <form th:if="${u.bloqueado}" th:action="@{/admin/usuarios/{id}/reactivar(id=${u.id})}" method="post" style="display:inline; margin-left:10px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-hero-secundario" style="width:auto;">Reactivar</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <p th:if="${aliados.isEmpty()}">No hay aliados comerciales.</p>
+    </section>
+</body>
+</html>

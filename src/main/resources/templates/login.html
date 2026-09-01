@@ -20,6 +20,7 @@
 
             <p th:if="${error}" th:text="${error}" style="color:#ff4d4d; background:#2a1414; padding:12px; border-radius:6px; margin-bottom:15px; font-size:14px;"></p>
             <p th:if="${mensaje}" th:text="${mensaje}" style="color:#4dff88; background:#142a1a; padding:12px; border-radius:6px; margin-bottom:15px; font-size:14px;"></p>
+            <p th:if="${restablecida}" style="color:#4dff88; background:#142a1a; padding:12px; border-radius:6px; margin-bottom:15px; font-size:14px;">Contraseña restablecida. Ya puedes iniciar sesión.</p>
 
             <form th:action="@{/login}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -33,6 +34,7 @@
                 <button type="submit" class="btn-hero-principal">Ingresar</button>
             </form>
             <p class="auth-link">¿No tienes cuenta? <a th:href="@{/registro}">Regístrate aquí</a></p>
+            <p class="auth-link"><a th:href="@{/recuperar-password}">¿Olvidaste tu contraseña?</a></p>
         </div>
     </section>
 

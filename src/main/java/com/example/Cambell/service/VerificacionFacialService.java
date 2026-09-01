@@ -1,5 +1,6 @@
 package com.example.Cambell.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +28,11 @@ public class VerificacionFacialService {
     @Value("${faceplusplus.ocr.url:https://api-us.faceplusplus.com/imagepp/v1/recognizetext}")
     private String ocrUrl;
 
+    // HU-S21: los archivos se guardan cifrados (.enc); la API solo recibe el
+    // contenido descifrado de forma temporal.
+    @Autowired
+    private CifradoArchivosService cifradoArchivosService;
+
     public double compararRostros(String rutaImagen1, String rutaImagen2) {
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -34,8 +40,8 @@ public class VerificacionFacialService {
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("api_key", apiKey);
             body.add("api_secret", apiSecret);
-            body.add("image_file1", new org.springframework.core.io.FileSystemResource(new File(rutaImagen1)));
-            body.add("image_file2", new org.springframework.core.io.FileSystemResource(new File(rutaImagen2)));
+            body.add("image_file1", recursoTemporal(rutaImagen1));
+            body.add("image_file2", recursoTemporal(rutaImagen2));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -52,6 +58,8 @@ public class VerificacionFacialService {
         } catch (Exception e) {
             System.err.println("Error al comparar rostros con Face++: " + e.getMessage());
             return -1;
+        } finally {
+            limpiarTemporales();
         }
     }
 
@@ -69,6 +77,8 @@ public class VerificacionFacialService {
         } catch (Exception e) {
             System.err.println("Error OCR al leer documento: " + e.getMessage());
             return false;
+        } finally {
+            limpiarTemporales();
         }
         if (textoExtraido == null || textoExtraido.isBlank()) {
             return false;
@@ -84,7 +94,7 @@ public class VerificacionFacialService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("api_key", apiKey);
         body.add("api_secret", apiSecret);
-        body.add("image_file", new org.springframework.core.io.FileSystemResource(new File(rutaImagen)));
+        body.add("image_file", recursoTemporal(rutaImagen));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -108,5 +118,36 @@ public class VerificacionFacialService {
             }
         }
         return sb.toString();
+    }
+
+    // Devuelve un archivo en claro (temporal) a partir de la ruta guardada;
+    // si el archivo está cifrado (.enc) lo descifra primero.
+    private File recursoTemporal(String ruta) {
+        if (ruta == null || ruta.isBlank()) {
+            throw new RuntimeException("Ruta de archivo vacía");
+        }
+        File original = new File(ruta);
+        if (!ruta.endsWith(".enc") || !original.exists()) {
+            return original;
+        }
+        byte[] claro = cifradoArchivosService.descifrarArchivo(ruta);
+        File temporal = null;
+        try {
+            temporal = File.createTempFile("cambell_", ".tmp");
+            java.nio.file.Files.write(temporal.toPath(), claro);
+            temporales.add(temporal);
+            return temporal;
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo descifrar la imagen: " + e.getMessage(), e);
+        }
+    }
+
+    private final java.util.List<File> temporales = new java.util.ArrayList<>();
+
+    private void limpiarTemporales() {
+        for (File f : temporales) {
+            if (f != null && f.exists()) f.delete();
+        }
+        temporales.clear();
     }
 }
